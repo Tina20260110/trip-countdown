@@ -1,50 +1,207 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+版本变化：未初始化（模板） → 1.0.0；首次建立工程与治理基线。
+原则变更：五个未定义模板槽位替换为十二项正式原则：
+I. 严格类型安全；II. Offline First；III. Privacy Minimal；
+IV. 清晰的数据和业务边界；V. Native Boundary；VI. 面向行为的测试；
+VII. 完整且可恢复的用户体验；VIII. Accessibility；IX. 简单代码与依赖克制；
+X. Specification Driven Development；XI. CI Quality Gate；XII. Release Safety。
+新增章节：项目范围与工作语言、开发流程与完成标准，以及具体治理规则。
+删除章节：无已生效章节；移除模板说明和未填占位符。
+模板同步：依赖模板与命令在运行时读取本章程，本次不修改模板。
+延后占位符：无。
+工程跟进：当前 package.json 尚无 lint、typecheck、tests 对应检查命令；
+后续须通过 Specification、Plan、Tasks 建立检查与 CI，完成前不得声称质量门禁通过。
+本次仅建立章程，不代表现有实现已经满足全部原则。
+-->
+
+# Trip Countdown Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. 严格类型安全
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- TypeScript 必须启用 `strict`，不得通过关闭严格检查绕过错误。
+- 所有业务实体及模块边界必须明确声明类型，覆盖输入、输出、错误和原生接口。
+- 禁止无理由使用 `any`。无法避免的第三方互操作必须局限在最小边界，
+  记录原因、替代方案和影响，并经 Review；不可信输入必须校验后再进入业务层。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+理由：类型约束必须覆盖业务和模块边界，使错误尽可能在开发阶段暴露。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Offline First
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+- Trip、Countdown、Notes、Checklist 和本地持久化等核心业务必须完全离线可用。
+- v1.0 不得依赖后端服务；核心数据读取、计算、修改、保存及提醒调度不得要求联网。
+- 必须验证离线冷启动、读取已保存数据、修改保存和重启后恢复；
+  断网不得阻断核心操作或造成数据丢失。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+理由：旅行场景中的网络不可用是正常使用条件，不能成为核心功能的前置障碍。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Privacy Minimal
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- Trip、Notes、Checklist 等用户数据仅保存在设备本地，不得由应用或依赖上传、
+  云同步，或写入远程日志；本地诊断信息也不得无必要记录用户内容。
+- 不得接入广告 SDK 或 Analytics SDK；新增依赖必须检查数据收集和权限行为。
+- 不得申请与已实现功能无关的敏感权限。
+- Notification 权限仅可在用户主动开启 Reminder 时请求，不得在启动或进入首页时请求。
+- 用户拒绝或撤销通知权限后，必须仍可使用其他核心功能，并明确呈现提醒不可用状态。
+- 必须核查系统备份、数据迁移和发布配置对“仅设备本地保存”的影响，
+  配置与隐私声明必须一致，不得仅凭未编写上传代码就认定符合要求。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+理由：减少收集、传输与授权需求，使实际行为符合用户对本地离线应用的预期。
+
+### IV. 清晰的数据和业务边界
+
+- 核心业务逻辑必须与 React UI 解耦，可在不渲染组件的情况下验证。
+- 本地数据访问必须通过职责明确、类型清晰的数据访问层处理。
+- UI 不得直接调用 SQLite、编写 SQL 或依赖数据库表结构；
+  持久化实现必须封装在数据访问层内。
+- 数据访问层必须明确成功、失败和校验行为；业务规则不得依赖 React 生命周期。
+
+理由：保持业务规则可测试，并使存储实现变化不扩散到页面代码。
+
+### V. Native Boundary
+
+- Kotlin / Swift 仅用于必要的平台原生能力；引入前必须在 Plan 中说明平台需求，
+  以及现有 Expo / React Native 能力无法满足的原因。
+- Trip、Countdown、Checklist 等核心业务规则必须在共享 TypeScript 中实现，
+  不得在 Kotlin / Swift 中重复实现。
+- Native Module 必须通过清晰、类型安全的 TypeScript API 暴露，
+  明确输入、输出、错误、权限和平台可用性。
+
+理由：保留必要的原生能力，同时避免两端业务规则分叉。
+
+### VI. 面向行为的测试
+
+- 测试必须优先验证用户可观察行为和业务规则，避免依赖私有函数、
+  组件内部状态或无业务意义的调用顺序。
+- Countdown 日期计算、Trip CRUD、Checklist 和 Persistence 必须具备自动化测试。
+- 日期计算测试必须覆盖 Specification 定义的当天、未来、已过期、跨日、
+  时区及夏令时边界，不得用测试替代日期语义的需求定义。
+- Trip 与 Checklist 必须覆盖正常操作、校验失败和关键失败路径；
+  Persistence 必须验证实际本地存储的写入、重读、重启后恢复及保存失败行为，
+  不得仅通过模拟存储证明持久化正确。
+- 缺陷修复必须增加或更新能复现该用户行为或业务错误的回归测试。
+
+理由：测试保护用户依赖的契约，并允许内部实现安全重构。
+
+### VII. 完整且可恢复的用户体验
+
+- 每项功能的 Specification 必须定义适用的 Loading、Empty、Error、Validation、
+  Permission Denied 状态及恢复方式；不适用的状态必须说明原因。
+- 数据保存失败不得静默失败或显示保存成功；必须显示可理解的反馈，
+  保留可恢复的用户输入，并提供重试或安全退出路径。
+- 异步操作必须防止重复提交造成重复数据；失败后必须能继续操作，
+  不得永久停留在 Loading 状态。
+
+理由：失败和空数据都是完整用户流程的一部分，必须具有可验证的结果。
+
+### VIII. Accessibility
+
+- Button、Checkbox 等交互控件必须提供可访问名称、正确角色，以及适用的
+  checked、disabled、selected 等状态，并可通过平台屏幕阅读器操作。
+- 错误、完成、选中和提醒状态不得仅通过颜色表达，必须辅以文字、图标语义
+  或可访问状态。
+- 核心流程必须验证 VoiceOver / TalkBack 的操作顺序和状态反馈，
+  并验证系统字体放大后关键内容与操作仍可用。
+
+理由：基础无障碍能力属于功能完成标准，而非发布后的附加改进。
+
+### IX. 简单代码与依赖克制
+
+- 必须选择满足当前已批准需求的最简单实现，不得为假设中的未来需求过度设计。
+- 新增全局状态库、大型依赖或抽象层前，必须在 Plan 中记录具体问题、
+  现有方案的不足、预期收益与维护成本，并经过人工 Review。
+- 数据访问边界等本章程要求的职责分离必须保持最小必要规模，
+  不得据此无理由引入通用框架或多层包装。
+- v1.0 不得引入 Docker、后端或云服务作为应用运行与核心功能的组成部分；
+  CI 和构建工具不得成为用户使用应用的在线依赖。
+
+理由：让工程复杂度与产品阶段相称，减少维护成本和不必要的运行依赖。
+
+### X. Specification Driven Development
+
+- 所有核心功能必须先建立 Specification，再完成技术 Plan 和 Tasks，最后实现。
+- Specification 必须包含可验证的需求、业务规则、异常状态和验收场景；
+  Plan 必须说明如何遵守本章程；Tasks 必须关联需求并列出验证工作。
+- 实现和验证证据必须能够追溯到需求及任务；需求变化必须同步相关文档。
+- Codex 每批实现后必须经过 Automated Validation 和 Human Review。
+  Codex 自检不得替代人工 Review，等待人工 Review 的实现不得宣称最终完成。
+
+理由：确保实现依据和验收标准可追溯，并保留明确的人类审查责任。
+
+### XI. CI Quality Gate
+
+- lint、typecheck、tests 必须有可重复执行的命令，并在 CI 中作为必要质量门禁。
+- 任一检查失败、未执行或缺少配置时，不得将相关实现任务视为完成或宣称门禁通过。
+- 自动生成代码与人工代码必须遵守相同质量门禁，不得通过跳过检查、
+  降低类型约束或删除有效测试制造通过结果。
+- Review 必须记录检查命令、结果和对应变更版本；代码修改后，
+  必须重新执行受影响检查，最终完成前必须取得完整门禁通过的证据。
+
+理由：以可复现的检查结果定义工程质量，避免依赖实现者的主观判断。
+
+### XII. Release Safety
+
+- Android / iOS 发布配置、实际权限、数据处理行为和隐私声明必须一致，
+  包含第三方依赖及系统配置产生的行为。
+- 华为应用市场和中国大陆 App Store 发布前必须核对当时有效的商店要求，
+  留存人工检查结果；不得将本章程视为已经满足商店审核要求的证明。
+- Production release 必须使用待发布构建在 Android 和 iOS 真实设备验证，
+  覆盖离线使用、数据持久化、通知授权与拒绝、提醒行为以及核心无障碍操作。
+  Android 验证必须包含目标华为设备环境，不得仅凭模拟器或 Expo Go 结果放行。
+- 商店发布相关变更必须经过人工 Review；发布记录必须关联构建版本、
+  真机测试结果、已知问题及人工批准结果。
+
+理由：发布安全取决于实际交付包与设备行为，而不仅是开发环境中能够运行。
+
+## 项目范围与工作语言
+
+Trip Countdown 是使用 Expo + React Native 构建的 iOS / Android 离线旅行倒计时 App，
+目标发布渠道为华为应用市场和中国大陆 App Store。v1.0 以设备本地的数据、
+业务计算与必要的平台能力完成核心流程，不依赖后端服务。
+
+PRD、Specification、Plan、Tasks 和 Review 文档必须使用中文；
+代码标识、类型、API 和 Git commit 必须使用英文。
+工具要求保留的标准标题、字段、命令和技术术语可以保留英文，正文说明使用中文。
+
+编写应用代码前必须遵守仓库 AGENTS.md 的版本化文档要求：当前 Expo SDK 57
+必须先阅读 https://docs.expo.dev/versions/v57.0.0/ ，不得以其他版本文档推断 API。
+升级 SDK 时必须同步核查文档依据、依赖兼容性和本章程中的版本说明。
+
+## 开发流程与完成标准
+
+1. Specification：定义用户场景、业务规则、离线与隐私约束、失败恢复和验收条件。
+2. Plan：执行 Constitution Check，确认业务、UI、数据与原生边界，
+   记录依赖选择、测试策略和发布影响。违反章程的方案不得直接进入实现。
+3. Tasks：建立可追溯任务，包含实现、自动验证、必要的设备验证和人工 Review。
+4. 实现与 Automated Validation：按任务交付可审查的变更，记录 lint、typecheck、
+   tests 结果以及必要的运行验证；失败或缺失项必须明确标记，不能视为通过。
+5. Human Review：每批实现提供中文 Review 记录，包含需求与任务对应关系、
+   行为变化、验证证据、未解决问题及章程符合情况。人工审查结论必须如实记录；
+   尚未审查时标记为“自动验证通过，待人工 Review”或实际未通过状态。
+6. 完成与发布：仅当需求验收、质量门禁及人工 Review 均通过时，相关实现才可标记完成。
+   Production release 还必须满足真机验证和发布人工批准要求。
+
+现有代码不因本章程建立而自动获得符合性结论；发现的差距必须记录为可追溯工作。
+纯文档变更必须检查结构、占位符、版本、日期及一致性；该检查不得替代应用实现的质量门禁。
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+本章程是项目工程决策与验收的共同基线；PRD、Specification、Plan、Tasks、
+代码与 Review 必须与其一致。每次 Plan 和变更 Review 必须检查全部十二项原则，
+对不适用项说明原因，对不符合项记录修正任务；未解决的违反项不得作为已完成交付。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+修订必须说明动机、变更原则、影响范围和已有实现或文档的迁移安排，
+经项目负责人或其指定的人工审查者批准后生效。不得以自动生成结果或临时口头约定
+替代批准记录。需要突破强制原则时，必须先完成章程修订，不得静默豁免。
+
+章程采用语义化版本：MAJOR 用于不兼容的原则删除或重新定义；
+MINOR 用于新增原则、章节或实质扩展要求；PATCH 用于不改变要求的澄清和文字修正。
+每次修订必须更新顶部 Sync Impact Report、版本和 Last Amended 日期，
+保留首次 Ratified 日期，并在后续相关文档工作中检查同步影响。
+
+本版根据项目负责人给出的十二项原则首次建立，版本为 1.0.0。
+此后任何修订均须遵守上述版本、审查和迁移规则。
+
+**Version**: 1.0.0 | **Ratified**: 2026-09-21 | **Last Amended**: 2026-09-21
