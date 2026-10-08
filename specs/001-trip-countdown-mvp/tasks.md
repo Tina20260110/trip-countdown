@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011 与 Phase 2 T012–T024A 已通过；已获准进入 Phase 3，但尚未开始 Phase 3 实现。
+**Status**: Phase 1 T001–T011、Phase 2 T012–T024A 与 Phase 3 T025–T040A 已通过；真实 SQLite 设备证据仍待 development build，已获准进入 Phase 4。
 
 **约束**:
 
@@ -58,23 +58,23 @@
 
 | Task ID | Description | Dependencies | Files / Area | Validation | 可并行 | Human Review |
 |---|---|---|---|---|---|---|
-| T025 | 定义 `preparePrivateStorage` TypeScript port、数据库初始化状态与类型化 storage/migration 错误；先用测试 adapter，不实现平台代码。 | T024A | `src/data/private-storage.ts`, `src/data/errors.ts`, `tests/data/private-storage-boundary.test.ts` | 初始化失败不调用 openDatabase，也不降级默认目录。 | 否 | 否 |
-| T026 | 写 schema v1 与 migration 契约测试：三表、索引、约束、FK cascade、`user_version` 0→1、重复初始化、高版本拒绝。 | T025 | `tests/data/migrations.test.ts`, `tests/data/fixtures/*` | 测试先失败；断言失败不删库重建。 | 否 | 否 |
-| T027 | 实现数据库连接与单飞初始化：先准备私有目录，再 open；每连接启用 `foreign_keys` 和 WAL；并发调用共享进行中 Promise。 | T026 | `src/data/database.ts` | 并发初始化只 open/migrate 一次；准备目录失败时零写入。 | 否 | 否 |
-| T028 | 实现 schema v1 与按序 `PRAGMA user_version` migration，在 exclusive transaction 成功后才更新版本；未来版本只读拒绝写入。 | T026, T027 | `src/data/migrations.ts`, `src/data/schema.ts` | v0→v1、重复迁移、回滚、未来版本测试通过。 | 否 | 否 |
-| T029 | 定义 Repository 公共模型映射与统一 validation/not-found/storage/unavailable Result；读回 row 必须验证类型、枚举与 date-only。 | T016, T018, T028 | `src/data/mappers.ts`, `src/data/repository-result.ts`, `tests/data/mappers.test.ts` | 损坏 row 返回 storage error，不被当作空数据；消息不泄露 SQL/路径/用户内容。 | 否 | 否 |
-| T030 | 先写 TripRepository 契约测试：list/get/create/update/delete、Create/Edit 校验、排序、Checklist 聚合、not-found、参数绑定。 | T029 | `tests/data/trip-repository.contract.test.ts` | 测试先失败；包含今天/未来升序、过去后置降序、同日 ID 稳定顺序。 | 否 | 否 |
-| T031 | 实现 TripRepository；聚合 Checklist 计数避免 N+1，UI 不可见 SQL/表名。 | T030 | `src/data/trip-repository.ts` | T030 通过；查询计划/spy 证明列表非逐 Trip 查询。 | 否 | 否 |
-| T032 [P] | 先写 ChecklistRepository 契约测试：add、setCompleted 显式目标值、remove、父 Trip 不存在、Trip 隔离、稳定顺序。 | T029 | `tests/data/checklist-repository.contract.test.ts` | 测试先失败；失败保持最后成功状态。 | 是 | 否 |
-| T033 | 实现 ChecklistRepository，写入串行、事务短小、参数绑定且不暴露 SQLite。 | T032 | `src/data/checklist-repository.ts` | T032 通过；不同 Trip 数据不串联。 | 否 | 否 |
-| T034 [P] | 先写 ReminderRepository 契约测试：offset 唯一、enabled/status/revision/notification_id、条件 revision 更新、cascade。 | T029 | `tests/data/reminder-repository.contract.test.ts` | 测试先失败；仅允许 1/7 和定义的 status。 | 是 | 否 |
-| T035 | 实现 ReminderRepository，只保存业务意图/调度观察状态，不请求权限、不调用 OS 通知。 | T034 | `src/data/reminder-repository.ts` | T034 通过；同 Trip/offset 不产生重复 row。 | 否 | 否 |
-| T036 | 实现写操作串行化、exclusive transaction helper 与有限错误映射；覆盖 busy/IO/full/corruption，禁止记录用户正文。 | T031, T033, T035 | `src/data/transactions.ts`, `src/data/error-mapping.ts`, `tests/data/transactions.test.ts` | 注入失败时回滚且原数据不丢；未知异常映射安全消息。 | 否 | 否 |
-| T037 | 建立实际 expo-sqlite 非发布设备契约入口：write/read、close/reopen、cascade、rollback、v0→v1、未来版本拒绝；不进入生产 route。 | T036 | `tests/device/sqlite-contract/*` | 开发构建可执行同一 Repository 契约；Jest mock 不作为通过证据。 | 否 | 是 |
-| T038 | **Phase 3 Automated Validation**：运行 data/domain 测试、lint、typecheck；记录实际 SQLite 契约为“待 development build”或真实结果。 | T025-T037 | Storage/Repository | JS 门禁全过；原生证据状态不得伪报。 | 否 | 否 |
-| T039 | **Phase 3 Diff Review**：核查 SQLite 单一 Source of Truth、无 ORM/AsyncStorage、无 UI SQL、migration 顺序与事务边界。 | T038 | Phase 3 diff | 所有 data-model 字段/约束/索引可追踪，无第二数据源。 | 否 | 是 |
-| T040 | **Phase 3 Constitution Check**：复核 II、III、IV、VI、VII、IX、X，记录设备证据尚未完成的准确状态。 | T039 | Constitution review record | 每项明确 PASS/不适用/修正任务，不把 mock 当持久化证据。 | 否 | 是 |
-| T040A | **Phase 3 Human Review Checkpoint**：人工批准 SQLite、migration、Repository 与错误边界。 | T040 | Review record | 记录人工结论；未批准不得进入 Core Trip UI。 | 否 | 是（必须） |
+| T025 | [X] 定义 `preparePrivateStorage` TypeScript port、数据库初始化状态与类型化 storage/migration 错误；先用测试 adapter，不实现平台代码。 | T024A | `src/data/private-storage.ts`, `src/data/errors.ts`, `tests/data/private-storage-boundary.test.ts` | 初始化失败不调用 openDatabase，也不降级默认目录。 | 否 | 否 |
+| T026 | [X] 写 schema v1 与 migration 契约测试：三表、索引、约束、FK cascade、`user_version` 0→1、重复初始化、高版本拒绝。 | T025 | `tests/data/migrations.test.ts`, `tests/data/fixtures/*` | 测试先失败；断言失败不删库重建。 | 否 | 否 |
+| T027 | [X] 实现数据库连接与单飞初始化：先准备私有目录，再 open；每连接启用 `foreign_keys` 和 WAL；并发调用共享进行中 Promise。 | T026 | `src/data/database.ts` | 并发初始化只 open/migrate 一次；准备目录失败时零写入。 | 否 | 否 |
+| T028 | [X] 实现 schema v1 与按序 `PRAGMA user_version` migration，在 exclusive transaction 成功后才更新版本；未来版本只读拒绝写入。 | T026, T027 | `src/data/migrations.ts`, `src/data/schema.ts` | v0→v1、重复迁移、回滚、未来版本测试通过。 | 否 | 否 |
+| T029 | [X] 定义 Repository 公共模型映射与统一 validation/not-found/storage/unavailable Result；读回 row 必须验证类型、枚举与 date-only。 | T016, T018, T028 | `src/data/mappers.ts`, `src/data/repository-result.ts`, `tests/data/mappers.test.ts` | 损坏 row 返回 storage error，不被当作空数据；消息不泄露 SQL/路径/用户内容。 | 否 | 否 |
+| T030 | [X] 先写 TripRepository 契约测试：list/get/create/update/delete、Create/Edit 校验、排序、Checklist 聚合、not-found、参数绑定。 | T029 | `tests/data/trip-repository.contract.test.ts` | 测试先失败；包含今天/未来升序、过去后置降序、同日 ID 稳定顺序。 | 否 | 否 |
+| T031 | [X] 实现 TripRepository；聚合 Checklist 计数避免 N+1，UI 不可见 SQL/表名。 | T030 | `src/data/trip-repository.ts` | T030 通过；查询计划/spy 证明列表非逐 Trip 查询。 | 否 | 否 |
+| T032 [P] | [X] 先写 ChecklistRepository 契约测试：add、setCompleted 显式目标值、remove、父 Trip 不存在、Trip 隔离、稳定顺序。 | T029 | `tests/data/checklist-repository.contract.test.ts` | 测试先失败；失败保持最后成功状态。 | 是 | 否 |
+| T033 | [X] 实现 ChecklistRepository，写入串行、事务短小、参数绑定且不暴露 SQLite。 | T032 | `src/data/checklist-repository.ts` | T032 通过；不同 Trip 数据不串联。 | 否 | 否 |
+| T034 [P] | [X] 先写 ReminderRepository 契约测试：offset 唯一、enabled/status/revision/notification_id、条件 revision 更新、cascade。 | T029 | `tests/data/reminder-repository.contract.test.ts` | 测试先失败；仅允许 1/7 和定义的 status。 | 是 | 否 |
+| T035 | [X] 实现 ReminderRepository，只保存业务意图/调度观察状态，不请求权限、不调用 OS 通知。 | T034 | `src/data/reminder-repository.ts` | T034 通过；同 Trip/offset 不产生重复 row。 | 否 | 否 |
+| T036 | [X] 实现写操作串行化、exclusive transaction helper 与有限错误映射；覆盖 busy/IO/full/corruption，禁止记录用户正文。 | T031, T033, T035 | `src/data/transactions.ts`, `src/data/error-mapping.ts`, `tests/data/transactions.test.ts` | 注入失败时回滚且原数据不丢；未知异常映射安全消息。 | 否 | 否 |
+| T037 | [X] 建立实际 expo-sqlite 非发布设备契约入口：write/read、close/reopen、cascade、rollback、v0→v1、未来版本拒绝；不进入生产 route。 | T036 | `tests/device/sqlite-contract/*` | 开发构建可执行同一 Repository 契约；Jest mock 不作为通过证据。 | 否 | 是 |
+| T038 | [X] **Phase 3 Automated Validation**：运行 data/domain 测试、lint、typecheck；记录实际 SQLite 契约为“待 development build”或真实结果。 | T025-T037 | Storage/Repository | JS 门禁全过；原生证据状态不得伪报。 | 否 | 否 |
+| T039 | [X] **Phase 3 Diff Review**：核查 SQLite 单一 Source of Truth、无 ORM/AsyncStorage、无 UI SQL、migration 顺序与事务边界。 | T038 | Phase 3 diff | 所有 data-model 字段/约束/索引可追踪，无第二数据源。 | 否 | 是 |
+| T040 | [X] **Phase 3 Constitution Check**：复核 II、III、IV、VI、VII、IX、X，记录设备证据尚未完成的准确状态。 | T039 | Constitution review record | 每项明确 PASS/不适用/修正任务，不把 mock 当持久化证据。 | 否 | 是 |
+| T040A | [X] **Phase 3 Human Review Checkpoint**：人工批准 SQLite、migration、Repository 与错误边界。 | T040 | Review record | 记录人工结论；未批准不得进入 Core Trip UI。 | 否 | 是（必须） |
 
 ## Phase 4 — Core Trip UI
 
