@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011 已通过；已获准进入 Phase 2，但尚未开始 Phase 2 实现。
+**Status**: Phase 1 T001–T011 与 Phase 2 T012–T024A 已通过；已获准进入 Phase 3，但尚未开始 Phase 3 实现。
 
 **约束**:
 
@@ -37,20 +37,20 @@
 
 | Task ID | Description | Dependencies | Files / Area | Validation | 可并行 | Human Review |
 |---|---|---|---|---|---|---|
-| T012 [P] | 定义 Trip、TripSummary、TripDetail、ChecklistItem、Reminder、ReminderStatus、ReminderOffset 与输入/Result/错误类型；不包含 SQLite row 或原生类型。 | T011 | `src/domain/types.ts`, `tests/domain/types.test.ts` | Typecheck 验证边界类型；枚举仅含设计文档允许值。 | 是 | 否 |
-| T013 [P] | 先写 grapheme 计数与字段边界测试：组合重音、国旗、ZWJ emoji、空白、恰好/超过 80、100、500。 | T011 | `tests/domain/graphemes.test.ts`, `tests/domain/validation.test.ts` | 测试先失败；断言不使用 JS `length` 作为期望语义。 | 是 | 否 |
-| T014 | 实现 SDK57 Hermes 可用的 grapheme 计数边界；使用 `Intl.Segmenter`，若目标运行时不支持则停止并提出最小兼容方案 Review，不静默加依赖。 | T013 | `src/domain/graphemes.ts` | T013 通过；在开发构建任务中另验证 Hermes。 | 否 | 是（若需 fallback） |
-| T015 | 先写 Create/Edit validation 测试：trim Destination、保留 Notes 正文、字段错误、Create 拒绝过去日期、Create 允许今天、Edit 允许合法过去日期。 | T012, T014 | `tests/domain/trip-validation.test.ts` | 测试先失败；覆盖 FR-003–006 与 Create/Edit 分流。 | 否 | 否 |
-| T016 | 实现 Trip Create/Edit validation 与 Checklist title validation，返回字段化 validation error，非法输入不产生可写模型。 | T015 | `src/domain/validation.ts` | T015 与 Checklist 1/100 边界测试通过。 | 否 | 否 |
-| T017 [P] | 先写严格 date-only 解析测试：格式、真实公历日期、跨月/跨年、闰日、非闰日、年份四位与 0–99 年特例。 | T012 | `tests/domain/date-only.test.ts` | 测试先失败；非法日期如 2025-02-29、2026-13-01 被拒绝。 | 是 | 否 |
-| T018 | 实现 date-only 解析、round-trip 合法性校验、本地 today components 与 UTC day ordinal；禁止裸字符串 Date 解析和本地午夜毫秒差。 | T017 | `src/domain/date-only.ts` | T017 通过；代码检索无 `new Date('YYYY-MM-DD')` 型路径。 | 否 | 否 |
-| T019 | 先写 Countdown 测试矩阵：Today、未来、过去、跨月、跨年、闰日、午夜、DST、Asia/Shanghai、America/New_York、时区切换和非法日期。 | T018 | `tests/domain/countdown.test.ts`, `tests/domain/fixtures/*` | 测试先失败；时区样本用独立 TZ 进程执行且无 ±1 天。 | 否 | 否 |
-| T020 | 实现 Countdown 日历日差与中文显示模型：`还有 N 天`、`今天出发`、`旅行已结束`。 | T019 | `src/domain/countdown.ts` | T019 全矩阵通过；非法日期返回类型化错误。 | 否 | 否 |
-| T021 [P] | 先写并实现 Checklist progress 纯函数：total=0 不显示进度；否则精确聚合 completed/total 和中文文本。 | T012 | `tests/domain/checklist-progress.test.ts`, `src/domain/checklist-progress.ts` | 0、混合、全完成样本通过，不修改输入数组。 | 是 | 否 |
-| T022 | **Phase 2 Automated Validation**：执行 domain 测试、独立 TZ 测试、lint、typecheck。 | T012-T021 | Domain 与 tests | 所有纯逻辑测试通过；没有 SQLite/UI/Native 依赖。 | 否 | 否 |
-| T023 | **Phase 2 Diff Review**：检查测试确实先定义行为，确认未将业务规则放入 React/SQLite/Native。 | T022 | Phase 2 diff | FR-003–005、009–010、012、014 可追踪；无架构漂移。 | 否 | 是 |
-| T024 | **Phase 2 Constitution Check**：复核原则 I、IV、V、VI、X，确认纯逻辑边界符合设计。 | T023 | Constitution review record | 每项明确 PASS/不适用/修正任务；不得静默豁免。 | 否 | 是 |
-| T024A | **Phase 2 Human Review Checkpoint**：人工批准 Domain 类型、测试语义和实现后才进入存储实现。 | T024 | Review record | 记录人工结论；未批准不得进入 Phase 3。 | 否 | 是（必须） |
+| T012 [P] | [X] 定义 Trip、TripSummary、TripDetail、ChecklistItem、Reminder、ReminderStatus、ReminderOffset 与输入/Result/错误类型；不包含 SQLite row 或原生类型。 | T011 | `src/domain/types.ts`, `tests/domain/types.test.ts` | Typecheck 验证边界类型；枚举仅含设计文档允许值。 | 是 | 否 |
+| T013 [P] | [X] 先写 grapheme 计数与字段边界测试：组合重音、国旗、ZWJ emoji、空白、恰好/超过 80、100、500。 | T011 | `tests/domain/graphemes.test.ts`, `tests/domain/validation.test.ts` | 测试先失败；断言不使用 JS `length` 作为期望语义。 | 是 | 否 |
+| T014 | [X] 实现 SDK57 Hermes 可用的 grapheme 计数边界；使用 `Intl.Segmenter`，若目标运行时不支持则停止并提出最小兼容方案 Review，不静默加依赖。 | T013 | `src/domain/graphemes.ts` | T013 通过；在开发构建任务中另验证 Hermes。 | 否 | 是（若需 fallback） |
+| T015 | [X] 先写 Create/Edit validation 测试：trim Destination、保留 Notes 正文、字段错误、Create 拒绝过去日期、Create 允许今天、Edit 允许合法过去日期。 | T012, T014 | `tests/domain/trip-validation.test.ts` | 测试先失败；覆盖 FR-003–006 与 Create/Edit 分流。 | 否 | 否 |
+| T016 | [X] 实现 Trip Create/Edit validation 与 Checklist title validation，返回字段化 validation error，非法输入不产生可写模型。 | T015 | `src/domain/validation.ts` | T015 与 Checklist 1/100 边界测试通过。 | 否 | 否 |
+| T017 [P] | [X] 先写严格 date-only 解析测试：格式、真实公历日期、跨月/跨年、闰日、非闰日、年份四位与 0–99 年特例。 | T012 | `tests/domain/date-only.test.ts` | 测试先失败；非法日期如 2025-02-29、2026-13-01 被拒绝。 | 是 | 否 |
+| T018 | [X] 实现 date-only 解析、round-trip 合法性校验、本地 today components 与 UTC day ordinal；禁止裸字符串 Date 解析和本地午夜毫秒差。 | T017 | `src/domain/date-only.ts` | T017 通过；代码检索无 `new Date('YYYY-MM-DD')` 型路径。 | 否 | 否 |
+| T019 | [X] 先写 Countdown 测试矩阵：Today、未来、过去、跨月、跨年、闰日、午夜、DST、Asia/Shanghai、America/New_York、时区切换和非法日期。 | T018 | `tests/domain/countdown.test.ts`, `tests/domain/fixtures/*` | 测试先失败；时区样本用独立 TZ 进程执行且无 ±1 天。 | 否 | 否 |
+| T020 | [X] 实现 Countdown 日历日差与中文显示模型：`还有 N 天`、`今天出发`、`旅行已结束`。 | T019 | `src/domain/countdown.ts` | T019 全矩阵通过；非法日期返回类型化错误。 | 否 | 否 |
+| T021 [P] | [X] 先写并实现 Checklist progress 纯函数：total=0 不显示进度；否则精确聚合 completed/total 和中文文本。 | T012 | `tests/domain/checklist-progress.test.ts`, `src/domain/checklist-progress.ts` | 0、混合、全完成样本通过，不修改输入数组。 | 是 | 否 |
+| T022 | [X] **Phase 2 Automated Validation**：执行 domain 测试、独立 TZ 测试、lint、typecheck。 | T012-T021 | Domain 与 tests | 所有纯逻辑测试通过；没有 SQLite/UI/Native 依赖。 | 否 | 否 |
+| T023 | [X] **Phase 2 Diff Review**：检查测试确实先定义行为，确认未将业务规则放入 React/SQLite/Native。 | T022 | Phase 2 diff | FR-003–005、009–010、012、014 可追踪；无架构漂移。 | 否 | 是 |
+| T024 | [X] **Phase 2 Constitution Check**：复核原则 I、IV、V、VI、X，确认纯逻辑边界符合设计。 | T023 | Constitution review record | 每项明确 PASS/不适用/修正任务；不得静默豁免。 | 否 | 是 |
+| T024A | [X] **Phase 2 Human Review Checkpoint**：人工批准 Domain 类型、测试语义和实现后才进入存储实现。 | T024 | Review record | 记录人工结论；未批准不得进入 Phase 3。 | 否 | 是（必须） |
 
 ## Phase 3 — Storage / Repository
 
