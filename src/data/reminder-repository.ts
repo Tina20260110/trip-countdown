@@ -1,7 +1,5 @@
-import type {
-  Reminder,
-  ReminderOffset,
-} from '../domain/types';
+import type { ReminderRepository } from '../contracts/repositories';
+import type { Reminder, ReminderOffset } from '../domain/types';
 import type { DatabaseConnection } from './database';
 import { mapDatabaseError } from './error-mapping';
 import { mapReminderRow } from './mappers';
@@ -24,19 +22,6 @@ const UPDATE_REMINDER_SQL = `UPDATE reminders SET
   enabled = ?, status = ?, revision = ?, notification_id = ?,
   target_date = ?, scheduled_at = ?, scheduled_timezone = ?, error_code = ?
   WHERE trip_id = ? AND offset_days = ? AND revision = ?`;
-
-export interface ReminderRepository {
-  list(tripId: number): Promise<RepositoryResult<readonly Reminder[]>>;
-  get(
-    tripId: number,
-    offsetDays: ReminderOffset,
-  ): Promise<RepositoryResult<Reminder>>;
-  create(reminder: Reminder): Promise<RepositoryResult<Reminder>>;
-  updateIfRevision(
-    expectedRevision: number,
-    reminder: Reminder,
-  ): Promise<RepositoryResult<Reminder>>;
-}
 
 function toRow(reminder: Reminder): Record<string, unknown> {
   return {

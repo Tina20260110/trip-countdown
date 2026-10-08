@@ -1,12 +1,6 @@
 import { parseDateOnly } from '../domain/date-only';
-import type {
-  CreateTripInput,
-  EditTripInput,
-  Reminder,
-  Trip,
-  TripDetail,
-  TripSummary,
-} from '../domain/types';
+import type { TripRepository } from '../contracts/repositories';
+import type { Reminder, Trip, TripSummary } from '../domain/types';
 import {
   validateCreateTripInput,
   validateEditTripInput,
@@ -56,17 +50,6 @@ const DELETE_TRIP_SQL = 'DELETE FROM trips WHERE id = ?';
 interface TripSummaryRow extends Record<string, unknown> {
   checklist_total?: unknown;
   checklist_completed?: unknown;
-}
-
-export interface TripRepository {
-  list(localToday: string): Promise<RepositoryResult<readonly TripSummary[]>>;
-  get(id: number): Promise<RepositoryResult<TripDetail>>;
-  create(
-    input: CreateTripInput,
-    localToday: string,
-  ): Promise<RepositoryResult<Trip>>;
-  update(id: number, input: EditTripInput): Promise<RepositoryResult<Trip>>;
-  delete(id: number): Promise<RepositoryResult<void>>;
 }
 
 interface TripRepositoryOptions {

@@ -1,18 +1,11 @@
 import type {
   NotFoundError,
-  Result,
   UnavailableError,
-  ValidationError,
 } from '../domain/types';
-import type { DataStorageError } from './errors';
-
-export type RepositoryError =
-  | ValidationError
-  | NotFoundError
-  | DataStorageError
-  | UnavailableError;
-
-export type RepositoryResult<T> = Result<T, RepositoryError>;
+export type {
+  RepositoryError,
+  RepositoryResult,
+} from '../contracts/repository-result';
 
 export function notFoundError(): NotFoundError {
   return { kind: 'not-found', message: '旅行不存在' };

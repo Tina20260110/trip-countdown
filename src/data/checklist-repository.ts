@@ -1,7 +1,5 @@
-import type {
-  ChecklistItem,
-  ChecklistItemInput,
-} from '../domain/types';
+import type { ChecklistRepository } from '../contracts/repositories';
+import type { ChecklistItem } from '../domain/types';
 import { validateChecklistItemInput } from '../domain/validation';
 import type { DatabaseConnection } from './database';
 import { mapDatabaseError } from './error-mapping';
@@ -24,19 +22,6 @@ const INSERT_ITEM_SQL = `INSERT INTO checklist_items
 const SET_COMPLETED_SQL =
   'UPDATE checklist_items SET completed = ? WHERE id = ?';
 const DELETE_ITEM_SQL = 'DELETE FROM checklist_items WHERE id = ?';
-
-export interface ChecklistRepository {
-  list(tripId: number): Promise<RepositoryResult<readonly ChecklistItem[]>>;
-  add(
-    tripId: number,
-    input: ChecklistItemInput,
-  ): Promise<RepositoryResult<ChecklistItem>>;
-  setCompleted(
-    itemId: number,
-    completed: boolean,
-  ): Promise<RepositoryResult<ChecklistItem>>;
-  remove(itemId: number): Promise<RepositoryResult<void>>;
-}
 
 interface ChecklistRepositoryOptions {
   now?: () => number;

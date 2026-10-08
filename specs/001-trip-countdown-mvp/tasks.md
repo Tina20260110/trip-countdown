@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011、Phase 2 T012–T024A 与 Phase 3 T025–T040A 已通过；真实 SQLite 设备证据仍待 development build，已获准进入 Phase 4。
+**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A 与 Phase 4 T041–T055 已通过；已获准进入 Phase 5，但尚未执行 Phase 5。生产 Bootstrap 仍待 Phase 7 Native Private Storage，真实删除协调仍待 T076，真实 SQLite 与设备无障碍/字体缩放证据仍待后续设备验证。
 
 **约束**:
 
@@ -82,21 +82,21 @@
 
 | Task ID | Description | Dependencies | Files / Area | Validation | 可并行 | Human Review |
 |---|---|---|---|---|---|---|
-| T041 | 重构 Root Stack 与 bootstrap 注入，数据库未就绪显示中文 Loading/Error/Retry；routes 仅组合 feature，不含 SQL/业务校验。 | T040A | `app/_layout.tsx`, `src/features/bootstrap/*` | 初始化成功/失败/重试 RNTL 测试通过；失败不开放写入。 | 否 | 否 |
-| T042 | 删除 Expo tabs 示例业务路由和无关 modal 页面，保留且不覆盖用户修改的 `components/EditScreenInfo.tsx`；配置四个目标 Stack route。 | T041 | `app/(tabs)/*`, `app/modal.tsx`, `app/index.tsx`, `app/trips/**` | 路由树仅含 `/`、new、detail、edit 及必要 not-found；测试不在 app/。 | 否 | 是 |
-| T043 [P] | 实现可复用中文状态组件：Loading、Empty、Error、Retry、字段 Validation、busy/disabled；支持字体缩放与 44pt/48dp 触控目标。 | T040A | `src/components/AsyncState.tsx`, `src/components/FormField.tsx`, `tests/features/components.test.tsx` | RNTL 验证可访问名称/角色、错误可感知、长文本换行。 | 是 | 否 |
-| T044 | 先写 Trips 页面行为测试：loading、empty、error/retry、列表、排序、Countdown、completed、progress、有/无事项。 | T031, T020, T021, T043 | `tests/features/trips-screen.test.tsx` | 测试先失败；错误不显示假 Empty。 | 否 | 否 |
-| T045 | 实现 Trips 页面与聚焦/恢复前台/本地午夜重查重算；不使用固定 24 小时间隔。 | T044 | `app/index.tsx`, `src/features/trips/TripsScreen.tsx`, `src/features/trips/useTrips.ts` | T044 通过；跨午夜与恢复前台更新 Countdown。 | 否 | 否 |
-| T046 | 先写 Create Trip 页面测试：中文字段、Create 校验、保留输入、保存失败/重试、防重复提交、成功返回列表。 | T031, T016, T043 | `tests/features/create-trip-screen.test.tsx` | 测试先失败；过去日期阻止 Repository 调用。 | 否 | 否 |
-| T047 | 实现 Create Trip route 与表单；保存瞬间重读 local today，commit 成功后才导航。 | T046 | `app/trips/new.tsx`, `src/features/trips/TripForm.tsx`, `src/features/trips/CreateTripScreen.tsx` | T046 通过；快速双击只创建一条。 | 否 | 否 |
-| T048 | 先写 Trip Detail 基础测试：loading、not-found、error/retry、Trip/Notes/Countdown、Edit/Delete 入口。 | T031, T020, T043 | `tests/features/trip-detail-screen.test.tsx` | 测试先失败；无效 id 显示“旅行不存在”和返回入口。 | 否 | 否 |
-| T049 | 实现 Trip Detail 基础 route 与聚焦刷新；为 Checklist/Reminder 留现有契约区域但不增加占位产品功能。 | T048 | `app/trips/[id]/index.tsx`, `src/features/trips/TripDetailScreen.tsx` | T048 通过；无 SQL 导入。 | 否 | 否 |
-| T050 | 先写并实现 Edit Trip：允许合法过去日期，保存失败保留输入，成功返回详情并刷新持久化结果。 | T031, T016, T043, T049 | `tests/features/edit-trip-screen.test.tsx`, `app/trips/[id]/edit.tsx`, `src/features/trips/EditTripScreen.tsx` | Edit 过去日期成功；非法日期失败；防重复提交。 | 否 | 否 |
-| T051 | 实现 Trip 删除 UI 协调外壳与可替换 deletion port：二次确认、取消无写入、`isDeleting` 防重复、error/retry；使用 test adapter 验证成功与失败 UI 行为。本任务不接入 `expo-notifications`、真实 OS reminder cancellation 或最终 Repository delete 协调。 | T049 | `src/features/trips/useDeleteTrip.ts`, `src/features/trips/trip-deletion-port.ts`, `tests/features/delete-trip.test.tsx` | 取消保持数据；重复提交被阻止；test adapter 失败时显示删除未完成并可重试，成功时返回列表。 | 否 | 是 |
-| T052 | **Phase 4 Automated Validation**：运行 Trip UI/RNTL、domain/data、lint、typecheck。 | T041-T051 | Core Trip UI | 所有状态与 CRUD 自动测试通过。 | 否 | 否 |
-| T053 | **Phase 4 Diff Review**：核查四页面契约、简体中文、无 app/ 测试、无 UI SQL、无 tabs 残留。 | T052 | Phase 4 diff | FR-001–010、015、020–022、034–036 可追踪。 | 否 | 是 |
-| T054 | **Phase 4 Constitution Check**：复核 IV、VI、VII、VIII、X；记录未实现的 Checklist/Reminder 为后续依赖而非假完成。 | T053 | Review record | 无原则违规或隐式功能新增。 | 否 | 是 |
-| T055 | **Phase 4 Human Review Checkpoint**：人工走查 Create→List→Detail→Edit→Delete 交互和中文文案。 | T054 | Review record | 人工批准后进入 Checklist；修改意见形成任务或回退。 | 否 | 是（必须） |
+| T041 | [X] 重构 Root Stack 与 bootstrap 注入，数据库未就绪显示中文 Loading/Error/Retry；routes 仅组合 feature，不含 SQL/业务校验。 | T040A | `app/_layout.tsx`, `src/features/bootstrap/*` | 初始化成功/失败/重试 RNTL 测试通过；失败不开放写入。 | 否 | 否 |
+| T042 | [X] 删除 Expo tabs 示例业务路由和无关 modal 页面，保留且不覆盖用户修改的 `components/EditScreenInfo.tsx`；配置四个目标 Stack route。 | T041 | `app/(tabs)/*`, `app/modal.tsx`, `app/index.tsx`, `app/trips/**` | 路由树仅含 `/`、new、detail、edit 及必要 not-found；测试不在 app/。 | 否 | 是 |
+| T043 [P] | [X] 实现可复用中文状态组件：Loading、Empty、Error、Retry、字段 Validation、busy/disabled；支持字体缩放与 44pt/48dp 触控目标。 | T040A | `src/components/AsyncState.tsx`, `src/components/FormField.tsx`, `tests/features/components.test.tsx` | RNTL 验证可访问名称/角色、错误可感知、长文本换行。 | 是 | 否 |
+| T044 | [X] 先写 Trips 页面行为测试：loading、empty、error/retry、列表、排序、Countdown、completed、progress、有/无事项。 | T031, T020, T021, T043 | `tests/features/trips-screen.test.tsx` | 测试先失败；错误不显示假 Empty。 | 否 | 否 |
+| T045 | [X] 实现 Trips 页面与聚焦/恢复前台/本地午夜重查重算；不使用固定 24 小时间隔。 | T044 | `app/index.tsx`, `src/features/trips/TripsScreen.tsx`, `src/features/trips/useTrips.ts` | T044 通过；跨午夜与恢复前台更新 Countdown。 | 否 | 否 |
+| T046 | [X] 先写 Create Trip 页面测试：中文字段、Create 校验、保留输入、保存失败/重试、防重复提交、成功返回列表。 | T031, T016, T043 | `tests/features/create-trip-screen.test.tsx` | 测试先失败；过去日期阻止 Repository 调用。 | 否 | 否 |
+| T047 | [X] 实现 Create Trip route 与表单；保存瞬间重读 local today，commit 成功后才导航。 | T046 | `app/trips/new.tsx`, `src/features/trips/TripForm.tsx`, `src/features/trips/CreateTripScreen.tsx` | T046 通过；快速双击只创建一条。 | 否 | 否 |
+| T048 | [X] 先写 Trip Detail 基础测试：loading、not-found、error/retry、Trip/Notes/Countdown、Edit/Delete 入口。 | T031, T020, T043 | `tests/features/trip-detail-screen.test.tsx` | 测试先失败；无效 id 显示“旅行不存在”和返回入口。 | 否 | 否 |
+| T049 | [X] 实现 Trip Detail 基础 route 与聚焦刷新；为 Checklist/Reminder 留现有契约区域但不增加占位产品功能。 | T048 | `app/trips/[id]/index.tsx`, `src/features/trips/TripDetailScreen.tsx` | T048 通过；无 SQL 导入。 | 否 | 否 |
+| T050 | [X] 先写并实现 Edit Trip：允许合法过去日期，保存失败保留输入，成功返回详情并刷新持久化结果。 | T031, T016, T043, T049 | `tests/features/edit-trip-screen.test.tsx`, `app/trips/[id]/edit.tsx`, `src/features/trips/EditTripScreen.tsx` | Edit 过去日期成功；非法日期失败；防重复提交。 | 否 | 否 |
+| T051 | [X] 实现 Trip 删除 UI 协调外壳与可替换 deletion port：二次确认、取消无写入、`isDeleting` 防重复、error/retry；使用 test adapter 验证成功与失败 UI 行为。本任务不接入 `expo-notifications`、真实 OS reminder cancellation 或最终 Repository delete 协调。 | T049 | `src/features/trips/useDeleteTrip.ts`, `src/features/trips/trip-deletion-port.ts`, `tests/features/delete-trip.test.tsx` | 取消保持数据；重复提交被阻止；test adapter 失败时显示删除未完成并可重试，成功时返回列表。 | 否 | 是 |
+| T052 | [X] **Phase 4 Automated Validation**：运行 Trip UI/RNTL、domain/data、lint、typecheck。 | T041-T051 | Core Trip UI | 所有状态与 CRUD 自动测试通过。 | 否 | 否 |
+| T053 | [X] **Phase 4 Diff Review**：核查四页面契约、简体中文、无 app/ 测试、无 UI SQL、无 tabs 残留。 | T052 | Phase 4 diff | FR-001–010、015、020–022、034–036 可追踪。 | 否 | 是 |
+| T054 | [X] **Phase 4 Constitution Check**：复核 IV、VI、VII、VIII、X；记录未实现的 Checklist/Reminder 为后续依赖而非假完成。 | T053 | Review record | 无原则违规或隐式功能新增。 | 否 | 是 |
+| T055 | [X] **Phase 4 Human Review Checkpoint**：人工走查 Create→List→Detail→Edit→Delete 交互和中文文案。 | T054 | Review record | 人工批准后进入 Checklist；修改意见形成任务或回退。 | 否 | 是（必须） |
 
 ## Phase 5 — Checklist
 
