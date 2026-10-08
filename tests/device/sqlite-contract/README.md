@@ -11,4 +11,13 @@
 - exclusive transaction rollback；
 - future schema version rejection。
 
-执行时记录平台、系统版本、development build、commit、私有目录准备结果和返回的 `SqliteContractEvidence`。在该记录存在前，Phase 3 只能声明 JS/TS 自动门禁通过，不能声明真实 SQLite persistence 已通过。
+同一入口还会调用 `runChecklistSqliteContract(privateDirectory)`，在另一个按
+`runId` 隔离的真实 SQLite 文件中验证：
+
+- Checklist add、`setCompleted(true)`、close/reopen 后内容与状态保持；
+- Trip A/B 数据隔离，更新和删除 Trip A 事项不影响 Trip B；
+- close/reopen 后隔离仍保持；
+- 删除父 Trip 后 Checklist FK cascade，其他 Trip 不受影响；
+- 真实 exclusive transaction 中注入失败后 rollback，先前成功数据不损坏。
+
+执行时记录平台、系统版本、development build、commit、私有目录准备结果和返回的 `SqliteContractEvidence`。在该记录存在前，Phase 3/5 只能声明 JS/TS 自动门禁和设备契约入口实现通过，不能声明真实 SQLite persistence、cascade 或 reopen 已通过。

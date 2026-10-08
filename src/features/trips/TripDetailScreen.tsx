@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, ErrorState, LoadingState } from '../../components/AsyncState';
-import type { TripRepository } from '../../contracts/repositories';
+import type { ChecklistRepository, TripRepository } from '../../contracts/repositories';
 import { calculateCountdown } from '../../domain/countdown';
 import { getLocalDateOnly } from '../../domain/date-only';
 import type { TripDetail } from '../../domain/types';
 import { useOptionalAppDependencies } from '../bootstrap/BootstrapGate';
+import { ChecklistSection } from '../checklist/ChecklistSection';
 import { unavailableTripDeletionPort, type TripDeletionPort } from './trip-deletion-port';
 import { useDeleteTrip } from './useDeleteTrip';
 import { getSystemNow } from './useTrips';
@@ -20,6 +21,7 @@ type DetailState =
 interface TripDetailScreenProps {
   tripId: string;
   repository?: TripRepository;
+  checklistRepository?: ChecklistRepository;
   deletionPort?: TripDeletionPort;
   getNow?: () => Date;
   focusSignal?: number;
@@ -37,6 +39,7 @@ function parseTripId(value: string): number | null {
 export function TripDetailScreen({
   tripId: rawTripId,
   repository: repositoryOverride,
+  checklistRepository: checklistRepositoryOverride,
   deletionPort = unavailableTripDeletionPort,
   getNow = getSystemNow,
   focusSignal,
@@ -46,7 +49,9 @@ export function TripDetailScreen({
 }: TripDetailScreenProps) {
   const dependencies = useOptionalAppDependencies();
   const repository = repositoryOverride ?? dependencies?.tripRepository;
+  const checklistRepository = checklistRepositoryOverride ?? dependencies?.checklistRepository;
   if (!repository) throw new Error('TripRepository is unavailable before bootstrap is ready');
+  if (!checklistRepository) throw new Error('ChecklistRepository is unavailable before bootstrap is ready');
   const tripRepository = repository;
   const tripId = parseTripId(rawTripId);
   const [state, setState] = useState<DetailState>(tripId === null ? { status: 'not-found' } : { status: 'loading' });
@@ -105,6 +110,7 @@ export function TripDetailScreen({
       <Text style={styles.value}>{state.trip.departureDate}</Text>
       <Text style={styles.label}>备注</Text>
       <Text style={styles.value}>{state.trip.notes === '' ? '没有备注' : state.trip.notes}</Text>
+      <ChecklistSection tripId={state.trip.id} repository={checklistRepository} refreshSignal={focusSignal} />
       <View style={styles.actions}>
         <ActionButton label="编辑旅行" disabled={deletion.isDeleting} onPress={() => onEdit(state.trip.id)} />
         <ActionButton label="删除旅行" disabled={deletion.isDeleting} onPress={deletion.requestDelete} />

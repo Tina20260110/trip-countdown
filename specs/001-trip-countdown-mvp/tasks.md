@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A 与 Phase 4 T041–T055 已通过；已获准进入 Phase 5，但尚未执行 Phase 5。生产 Bootstrap 仍待 Phase 7 Native Private Storage，真实删除协调仍待 T076，真实 SQLite 与设备无障碍/字体缩放证据仍待后续设备验证。
+**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055 与 Phase 5 T056–T065 已通过；已获准进入 Phase 6，但尚未执行 Phase 6。T061 真实 SQLite contract 尚未在 development build 执行；生产 Bootstrap 仍待 Phase 7 Native Private Storage，真实删除协调仍待 T076，离线重启恢复及设备无障碍/字体缩放证据仍待后续验证。
 
 **约束**:
 
@@ -104,16 +104,16 @@
 
 | Task ID | Description | Dependencies | Files / Area | Validation | 可并行 | Human Review |
 |---|---|---|---|---|---|---|
-| T056 | 先写 Checklist feature 测试：空状态、add trim/validation、防重复、Trip 隔离、持久化重读。 | T055, T033, T016 | `tests/features/checklist-add.test.tsx` | 测试先失败；错误保留输入且不显示假成功。 | 否 | 否 |
-| T057 | 实现 Checklist 列表、空状态与 add 流程，写成功后从 Repository 重查。 | T056 | `src/features/checklist/ChecklistSection.tsx`, `src/features/checklist/useChecklist.ts` | T056 通过；另一 Trip 不变化。 | 否 | 否 |
-| T058 | 先写并实现 `setCompleted(itemId, completed)` UI：Pending↔Completed、checked 状态、保存中禁用、失败回滚最后成功状态。 | T057 | `tests/features/checklist-toggle.test.tsx`, `src/features/checklist/ChecklistItemRow.tsx` | RNTL 验证 checkbox role/name/checked/disabled 与中文非颜色表达。 | 否 | 否 |
-| T059 | 先写并实现 Checklist delete 与进度重算；一项删到零项恢复 Empty，不影响其他 Trip。 | T057, T058 | `tests/features/checklist-delete.test.tsx`, `src/features/checklist/ChecklistSection.tsx` | 删除失败保留 item/进度并可重试；成功重读持久化值。 | 否 | 否 |
-| T060 | 将 Checklist Section 接入 Trip Detail，并把 progress 聚合展示接入 Trips；验证 add/toggle/delete 后两页一致。 | T059, T045, T049 | `src/features/trips/TripDetailScreen.tsx`, `src/features/trips/TripsScreen.tsx`, `tests/features/checklist-integration.test.tsx` | `已完成 x / y` 仅 total>0 显示；聚合无 N+1。 | 否 | 否 |
-| T061 | 补充实际 SQLite Checklist persistence/reopen/cascade/Trip isolation 设备契约。 | T060, T037 | `tests/device/sqlite-contract/checklist.*` | close/reopen 后状态一致；删除 Trip 零 Checklist 残留。 | 否 | 是 |
-| T062 | **Phase 5 Automated Validation**：运行 Checklist、Trip 回归、lint、typecheck。 | T056-T061 | Checklist | 自动测试全过；设备项如未运行明确标 later development validation。 | 否 | 否 |
-| T063 | **Phase 5 Diff Review**：核查立即保存语义、错误恢复、progress、Trip 隔离、可访问 checkbox。 | T062 | Phase 5 diff | FR-011–014、018–022、029 可追踪。 | 否 | 是 |
-| T064 | **Phase 5 Constitution Check**：复核 II、IV、VI、VII、VIII、X。 | T063 | Review record | 记录 PASS/修正项，无虚假持久化成功。 | 否 | 是 |
-| T065 | **Phase 5 Human Review Checkpoint**：人工走查 Passport/Visa/Charger 场景及错误恢复。 | T064 | Review record | 人工批准后进入 Reminder。 | 否 | 是（必须） |
+| T056 | [X] 先写 Checklist feature 测试：空状态、add trim/validation、防重复、Trip 隔离、持久化重读。 | T055, T033, T016 | `tests/features/checklist-add.test.tsx` | 测试先失败；错误保留输入且不显示假成功。 | 否 | 否 |
+| T057 | [X] 实现 Checklist 列表、空状态与 add 流程，写成功后从 Repository 重查。 | T056 | `src/features/checklist/ChecklistSection.tsx`, `src/features/checklist/useChecklist.ts` | T056 通过；另一 Trip 不变化。 | 否 | 否 |
+| T058 | [X] 先写并实现 `setCompleted(itemId, completed)` UI：Pending↔Completed、checked 状态、保存中禁用、失败回滚最后成功状态。 | T057 | `tests/features/checklist-toggle.test.tsx`, `src/features/checklist/ChecklistItemRow.tsx` | RNTL 验证 checkbox role/name/checked/disabled 与中文非颜色表达。 | 否 | 否 |
+| T059 | [X] 先写并实现 Checklist delete 与进度重算；一项删到零项恢复 Empty，不影响其他 Trip。 | T057, T058 | `tests/features/checklist-delete.test.tsx`, `src/features/checklist/ChecklistSection.tsx` | 删除失败保留 item/进度并可重试；成功重读持久化值。 | 否 | 否 |
+| T060 | [X] 将 Checklist Section 接入 Trip Detail，并把 progress 聚合展示接入 Trips；验证 add/toggle/delete 后两页一致。 | T059, T045, T049 | `src/features/trips/TripDetailScreen.tsx`, `src/features/trips/TripsScreen.tsx`, `tests/features/checklist-integration.test.tsx` | `已完成 x / y` 仅 total>0 显示；聚合无 N+1。 | 否 | 否 |
+| T061 | [X] 补充实际 SQLite Checklist persistence/reopen/cascade/Trip isolation 设备契约。 | T060, T037 | `tests/device/sqlite-contract/checklist.*` | close/reopen 后状态一致；删除 Trip 零 Checklist 残留。 | 否 | 是 |
+| T062 | [X] **Phase 5 Automated Validation**：运行 Checklist、Trip 回归、lint、typecheck。 | T056-T061 | Checklist | 自动测试全过；设备项如未运行明确标 later development validation。 | 否 | 否 |
+| T063 | [X] **Phase 5 Diff Review**：核查立即保存语义、错误恢复、progress、Trip 隔离、可访问 checkbox。 | T062 | Phase 5 diff | FR-011–014、018–022、029 可追踪。 | 否 | 是 |
+| T064 | [X] **Phase 5 Constitution Check**：复核 II、IV、VI、VII、VIII、X。 | T063 | Review record | 记录 PASS/修正项，无虚假持久化成功。 | 否 | 是 |
+| T065 | [X] **Phase 5 Human Review Checkpoint**：人工走查 Passport/Visa/Charger 场景及错误恢复。 | T064 | Review record | 人工批准后进入 Reminder。 | 否 | 是（必须） |
 
 ## Phase 6 — Reminder
 

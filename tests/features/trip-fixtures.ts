@@ -1,4 +1,4 @@
-import type { TripRepository } from '../../src/contracts/repositories';
+import type { ChecklistRepository, TripRepository } from '../../src/contracts/repositories';
 import type { TripDetail } from '../../src/domain/types';
 
 export function detail(overrides: Partial<TripDetail> = {}): TripDetail {
@@ -17,4 +17,13 @@ export function detail(overrides: Partial<TripDetail> = {}): TripDetail {
 
 export function repositoryWithGet(get: TripRepository['get']): TripRepository {
   return { list: jest.fn(), get, create: jest.fn(), update: jest.fn(), delete: jest.fn() };
+}
+
+export function emptyChecklistRepository(): ChecklistRepository {
+  return {
+    list: jest.fn().mockResolvedValue({ ok: true, value: [] }),
+    add: jest.fn(),
+    setCompleted: jest.fn(),
+    remove: jest.fn(),
+  };
 }

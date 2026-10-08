@@ -9,6 +9,10 @@ import { migrateDatabase } from '../../../src/data/migrations';
 import { createReminderRepository } from '../../../src/data/reminder-repository';
 import { createTripRepository } from '../../../src/data/trip-repository';
 import { runExclusiveTransaction } from '../../../src/data/transactions';
+import {
+  runChecklistSqliteContract,
+  type ChecklistSqliteContractEvidence,
+} from './checklist-contract';
 
 export interface SqliteContractEvidence {
   databaseName: string;
@@ -19,6 +23,7 @@ export interface SqliteContractEvidence {
   cascade: boolean;
   rollback: boolean;
   futureVersionRejected: boolean;
+  checklist: ChecklistSqliteContractEvidence;
 }
 
 interface PragmaRow {
@@ -158,6 +163,10 @@ export async function runExpoSqliteContract(
   const futureVersionRejected =
     !future.ok && future.error.code === 'unsupported-schema-version';
   assertContract(futureVersionRejected, 'future schema version rejection');
+  const checklistEvidence = await runChecklistSqliteContract(
+    privateDirectory,
+    runId,
+  );
 
   return {
     databaseName,
@@ -168,5 +177,6 @@ export async function runExpoSqliteContract(
     cascade,
     rollback,
     futureVersionRejected,
+    checklist: checklistEvidence,
   };
 }

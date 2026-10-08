@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 
 import type { TripRepository } from '../../src/contracts/repositories';
 import { TripDetailScreen } from '../../src/features/trips/TripDetailScreen';
-import { detail, repositoryWithGet } from './trip-fixtures';
+import { detail, emptyChecklistRepository, repositoryWithGet } from './trip-fixtures';
 
 describe('TripDetailScreen', () => {
   it('shows loading and then the persisted Trip fields and actions', async () => {
@@ -13,6 +13,7 @@ describe('TripDetailScreen', () => {
       <TripDetailScreen
         tripId="7"
         repository={repositoryWithGet(get)}
+        checklistRepository={emptyChecklistRepository()}
         getNow={() => new Date(2026, 9, 8, 12)}
         onBack={jest.fn()}
         onEdit={jest.fn()}
@@ -39,6 +40,7 @@ describe('TripDetailScreen', () => {
       <TripDetailScreen
         tripId="7"
         repository={repositoryWithGet(get)}
+        checklistRepository={emptyChecklistRepository()}
         getNow={() => new Date(2026, 9, 8, 12)}
         onBack={jest.fn()}
         onEdit={jest.fn()}
@@ -55,6 +57,7 @@ describe('TripDetailScreen', () => {
       <TripDetailScreen
         tripId="abc"
         repository={repositoryWithGet(invalidGet)}
+        checklistRepository={emptyChecklistRepository()}
         getNow={() => new Date(2026, 9, 8)}
         onBack={jest.fn()}
         onEdit={jest.fn()}
@@ -73,6 +76,7 @@ describe('TripDetailScreen', () => {
       <TripDetailScreen
         tripId="7"
         repository={repositoryWithGet(get)}
+        checklistRepository={emptyChecklistRepository()}
         getNow={() => new Date(2026, 9, 8)}
         onBack={jest.fn()}
         onEdit={jest.fn()}
@@ -91,7 +95,7 @@ describe('TripDetailScreen', () => {
       .mockResolvedValueOnce({ ok: true, value: detail({ destination: '大阪' }) });
     const onEdit = jest.fn();
     const props = {
-      tripId: '7', repository: repositoryWithGet(get), getNow: () => new Date(2026, 9, 8),
+      tripId: '7', repository: repositoryWithGet(get), checklistRepository: emptyChecklistRepository(), getNow: () => new Date(2026, 9, 8),
       onBack: jest.fn(), onEdit, onDeleted: jest.fn(),
     };
     const view = await render(<TripDetailScreen {...props} focusSignal={0} />);

@@ -3,13 +3,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import type { TripRepository } from '../../src/contracts/repositories';
 import type { TripDeletionPort } from '../../src/features/trips/trip-deletion-port';
 import { TripDetailScreen } from '../../src/features/trips/TripDetailScreen';
-import { detail, repositoryWithGet } from './trip-fixtures';
+import { detail, emptyChecklistRepository, repositoryWithGet } from './trip-fixtures';
 
 function screenProps(port: TripDeletionPort, onDeleted = jest.fn()) {
   const get = jest.fn<ReturnType<TripRepository['get']>, Parameters<TripRepository['get']>>()
     .mockResolvedValue({ ok: true, value: detail() });
   return {
-    tripId: '7', repository: repositoryWithGet(get), deletionPort: port,
+    tripId: '7', repository: repositoryWithGet(get), checklistRepository: emptyChecklistRepository(), deletionPort: port,
     getNow: () => new Date(2026, 9, 8), onBack: jest.fn(), onEdit: jest.fn(), onDeleted,
   };
 }
