@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { AppState, Text } from 'react-native';
 
 import type { AppDependencies, BootstrapPort } from '../../src/features/bootstrap/types';
 import { BootstrapGate } from '../../src/features/bootstrap/BootstrapGate';
@@ -15,6 +15,30 @@ function deferred<T>() {
 }
 
 describe('BootstrapGate', () => {
+  it('runs reminder reconciliation whenever the ready app returns to foreground', async () => {
+    const reconcile = jest.fn().mockResolvedValue({ ok: true, value: undefined });
+    let listener: ((state: string) => void) | undefined;
+    const subscription = { remove: jest.fn() };
+    const appState = jest.spyOn(AppState, 'addEventListener').mockImplementation((_, next) => {
+      listener = next as (state: string) => void;
+      return subscription;
+    });
+    const readyDependencies = {
+      ...dependencies,
+      reminderReconciler: { reconcile },
+    } as AppDependencies;
+
+    await render(
+      <BootstrapGate bootstrap={{ initialize: jest.fn().mockResolvedValue({ ok: true, value: readyDependencies }) }}>
+        <Text>应用路由</Text>
+      </BootstrapGate>,
+    );
+    expect(await screen.findByText('应用路由')).toBeTruthy();
+    listener?.('active');
+    await waitFor(() => expect(reconcile).toHaveBeenCalledTimes(1));
+    appState.mockRestore();
+  });
+
   it('shows Chinese loading until initialization succeeds, then renders routes', async () => {
     const pending = deferred<Awaited<ReturnType<BootstrapPort['initialize']>>>();
     const bootstrap: BootstrapPort = { initialize: jest.fn(() => pending.promise) };

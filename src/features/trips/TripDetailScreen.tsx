@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, ErrorState, LoadingState } from '../../components/AsyncState';
-import type { ChecklistRepository, TripRepository } from '../../contracts/repositories';
+import type { ChecklistRepository, ReminderRepository, TripRepository } from '../../contracts/repositories';
 import { calculateCountdown } from '../../domain/countdown';
 import { getLocalDateOnly } from '../../domain/date-only';
 import type { TripDetail } from '../../domain/types';
 import { useOptionalAppDependencies } from '../bootstrap/BootstrapGate';
 import { ChecklistSection } from '../checklist/ChecklistSection';
+import { ReminderSection } from '../reminders/ReminderSection';
+import type { ReminderCoordinator } from '../reminders/reminder-coordinator';
 import { unavailableTripDeletionPort, type TripDeletionPort } from './trip-deletion-port';
 import { useDeleteTrip } from './useDeleteTrip';
 import { getSystemNow } from './useTrips';
@@ -22,6 +24,9 @@ interface TripDetailScreenProps {
   tripId: string;
   repository?: TripRepository;
   checklistRepository?: ChecklistRepository;
+  reminderRepository?: ReminderRepository;
+  reminderCoordinator?: Pick<ReminderCoordinator, 'enable' | 'disable'>;
+  reminderPlatform?: 'ios' | 'android';
   deletionPort?: TripDeletionPort;
   getNow?: () => Date;
   focusSignal?: number;
@@ -40,7 +45,10 @@ export function TripDetailScreen({
   tripId: rawTripId,
   repository: repositoryOverride,
   checklistRepository: checklistRepositoryOverride,
-  deletionPort = unavailableTripDeletionPort,
+  reminderRepository: reminderRepositoryOverride,
+  reminderCoordinator: reminderCoordinatorOverride,
+  reminderPlatform,
+  deletionPort: deletionPortOverride,
   getNow = getSystemNow,
   focusSignal,
   onBack,
@@ -50,6 +58,9 @@ export function TripDetailScreen({
   const dependencies = useOptionalAppDependencies();
   const repository = repositoryOverride ?? dependencies?.tripRepository;
   const checklistRepository = checklistRepositoryOverride ?? dependencies?.checklistRepository;
+  const deletionPort = deletionPortOverride ?? dependencies?.tripDeletionPort ?? unavailableTripDeletionPort;
+  const reminderRepository = reminderRepositoryOverride ?? dependencies?.reminderRepository;
+  const reminderCoordinator = reminderCoordinatorOverride ?? dependencies?.reminderCoordinator;
   if (!repository) throw new Error('TripRepository is unavailable before bootstrap is ready');
   if (!checklistRepository) throw new Error('ChecklistRepository is unavailable before bootstrap is ready');
   const tripRepository = repository;
@@ -111,6 +122,16 @@ export function TripDetailScreen({
       <Text style={styles.label}>备注</Text>
       <Text style={styles.value}>{state.trip.notes === '' ? '没有备注' : state.trip.notes}</Text>
       <ChecklistSection tripId={state.trip.id} repository={checklistRepository} refreshSignal={focusSignal} />
+      {reminderRepository && reminderCoordinator ? (
+        <ReminderSection
+          tripId={state.trip.id}
+          departureDate={state.trip.departureDate}
+          repository={reminderRepository}
+          coordinator={reminderCoordinator}
+          platform={reminderPlatform}
+          refreshSignal={focusSignal}
+        />
+      ) : null}
       <View style={styles.actions}>
         <ActionButton label="编辑旅行" disabled={deletion.isDeleting} onPress={() => onEdit(state.trip.id)} />
         <ActionButton label="删除旅行" disabled={deletion.isDeleting} onPress={deletion.requestDelete} />

@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { AppState } from 'react-native';
 
 import { ErrorState, LoadingState } from '../../components/AsyncState';
 import type {
@@ -69,6 +70,16 @@ export function BootstrapGate({ bootstrap, children }: BootstrapGateProps) {
       mounted.current = false;
     };
   }, [initialize]);
+
+  useEffect(() => {
+    if (state.status !== 'ready') return;
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        void state.dependencies.reminderReconciler.reconcile().catch(() => undefined);
+      }
+    });
+    return () => subscription?.remove();
+  }, [state]);
 
   if (state.status === 'initializing') return <LoadingState />;
   if (state.status === 'failed') {

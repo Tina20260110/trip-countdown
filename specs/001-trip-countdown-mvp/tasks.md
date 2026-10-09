@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055 与 Phase 5 T056–T065 已通过；已获准进入 Phase 6，但尚未执行 Phase 6。T061 真实 SQLite contract 尚未在 development build 执行；生产 Bootstrap 仍待 Phase 7 Native Private Storage，真实删除协调仍待 T076，离线重启恢复及设备无障碍/字体缩放证据仍待后续验证。
+**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065 与 Phase 6 T066–T081 已通过；已批准进入 Phase 7，但尚未执行 Phase 7。T061 真实 SQLite contract 尚未在 development build 执行；生产 Bootstrap 仍待 Phase 7 Native Private Storage，真实通知调度、离线重启恢复及设备无障碍/字体缩放证据仍待后续验证。
 
 **约束**:
 
@@ -121,22 +121,22 @@
 
 | Task ID | Description | Dependencies | Files / Area | Validation | 可并行 | Human Review |
 |---|---|---|---|---|---|---|
-| T066 | 安装 SDK57 兼容 `expo-notifications` 并定义 NotificationAdapter 类型：permission、schedule、cancel、listScheduled、delivered cleanup；不获取 push token。 | T065 | `package.json`, `package-lock.json`, `src/features/reminders/notification-adapter.ts` | 依赖版本与 SDK57 对齐；API 无 remote token 方法。 | 否 | 是 |
-| T067 [P] | 先写 Reminder calendar 测试：7/1 天、09:00、过去时刻、跨月/年/闰日、iOS CALENDAR components、Android 当前时区 DATE instant。 | T065, T018 | `tests/reminders/reminder-time.test.ts` | 测试先失败；过去时刻返回 unavailable，不补发。 | 是 | 否 |
-| T068 | 实现 Reminder 目标日期/时间纯逻辑与平台 trigger 候选，不推断 Destination 时区。 | T067 | `src/features/reminders/reminder-time.ts` | T067 通过；无城市/网络/位置逻辑。 | 否 | 否 |
-| T069 | 先写并实现权限流程：普通启动/浏览只查询不请求；主动 enable 才按需请求；denied/canAskAgain=false/撤销均为中文状态且 P1 可用。 | T066 | `tests/reminders/permission-flow.test.ts`, `src/features/reminders/permission.ts` | requestPermission 仅出现在明确 enable 路径。 | 否 | 否 |
-| T070 | 实现平台 adapter：固定中文无用户正文 payload、稳定 identifier、repeats=false、Android channel 与 best-effort；不得申请 exact alarm。 | T066, T068, T069 | `src/features/reminders/expo-notification-adapter.ts`, `tests/reminders/notification-adapter.test.ts` | mock 验证 payload/trigger/id；无 push token/exact alarm API。 | 否 | 否 |
-| T071 | 先写 ReminderCoordinator enable 测试：保存 pending/revision，取消旧 ID，再 schedule，再条件确认；失败为 error/unavailable/permission_denied 且可重试。 | T035, T070 | `tests/reminders/coordinator-enable.test.ts` | 测试先失败；OS 调用不在 DB transaction；旧 revision 不能覆盖新意图。 | 否 | 否 |
-| T072 | 实现按 Trip 串行的 enable/retry 协调流程与 revision/notification_id 防旧结果覆盖。 | T071 | `src/features/reminders/reminder-coordinator.ts` | T071 通过；同 Trip/offset 最多一个有效请求。 | 否 | 否 |
-| T073 | 先写并实现 disable：先保存 pending 意图、cancel 成功才确认 disabled；失败保留可重试状态，其他 offset/Trip 不受影响。 | T072 | `tests/reminders/coordinator-disable.test.ts`, `src/features/reminders/reminder-coordinator.ts` | cancel 失败不显示 disabled 成功。 | 否 | 否 |
-| T074 | 先写并实现 Departure Date 修改后的 reschedule：Trip commit 不回滚；保留 offset；新目标过去则取消旧请求并标 unavailable；已送达不重复。 | T072, T050 | `tests/reminders/reschedule.test.ts`, `src/features/reminders/reminder-coordinator.ts`, `src/features/trips/EditTripScreen.tsx` | 日期更新成功而调度失败时准确分离两种结果。 | 否 | 否 |
-| T075 | 先写并实现启动/前台 reconciliation：对照 SQLite 与 OS pending，修复 pending/孤儿/DB确认失败，Android 按当前时区重排 future，不补发过去提醒。 | T072 | `tests/reminders/reconciliation.test.ts`, `src/features/reminders/reconciliation.ts`, `src/features/bootstrap/*` | 重复运行幂等；时区变化无重复；旧 revision 不覆盖新状态。 | 否 | 否 |
-| T076 | 将 T051 deletion port 接入真实 Reminder cancellation 与 TripRepository delete：先取消 future scheduled reminders；失败时保留全部 SQLite Trip/Checklist/Reminder；成功后执行 Repository transaction delete 与 FK cascade。注入取消后/DB删除前崩溃并由 reconciliation 恢复所需调度或完成最终删除。 | T051, T075 | `tests/reminders/trip-delete-coordination.test.ts`, `src/features/trips/useDeleteTrip.ts`, `src/features/trips/trip-deletion-port.ts` | 取消失败绝不调用 Repository delete；崩溃窗口无重复通知；历史 delivered 不阻塞删除。 | 否 | 否 |
-| T077 | 实现 Trip Detail Reminder UI：7天/1天、permission denied、unavailable/error/retry、09:00说明、Android 已确认的时区/延迟限制；防重复操作。 | T073-T075, T049 | `src/features/reminders/ReminderSection.tsx`, `tests/features/reminder-section.test.tsx` | 全部自有文案简体中文；状态非仅颜色；普通渲染不弹权限。 | 否 | 否 |
-| T078 | **Phase 6 Automated Validation**：运行 reminder adapter/coordinator/reconciliation/UI 与全量 JS 门禁。 | T066-T077 | Reminder | 全部自动测试通过；真实通知仍标设备验证依赖。 | 否 | 否 |
-| T079 | **Phase 6 Diff Review**：核查无 remote push/token、无 exact alarm、无目的地时区、无用户正文通知、DB/OS 非事务边界正确。 | T078 | Phase 6 diff | FR-023–028b 可追踪；R1 限制未被扩大或掩盖。 | 否 | 是 |
-| T080 | **Phase 6 Constitution Check**：复核 II、III、IV、V、VI、VII、IX、X、XII。 | T079 | Review record | 明确 simulator/mock 不等于真机提醒证据。 | 否 | 是 |
-| T081 | **Phase 6 Human Review Checkpoint**：人工审查权限时机、平台差异文案、一致性/崩溃恢复设计。 | T080 | Review record | 批准后进入 Native/Backup；问题形成修正任务。 | 否 | 是（必须） |
+| T066 | [X] 安装 SDK57 兼容 `expo-notifications` 并定义 NotificationAdapter 类型：permission、schedule、cancel、listScheduled、delivered cleanup；不获取 push token。 | T065 | `package.json`, `package-lock.json`, `src/features/reminders/notification-adapter.ts` | 依赖版本与 SDK57 对齐；API 无 remote token 方法。 | 否 | 是 |
+| T067 [P] | [X] 先写 Reminder calendar 测试：7/1 天、09:00、过去时刻、跨月/年/闰日、iOS CALENDAR components、Android 当前时区 DATE instant。 | T065, T018 | `tests/reminders/reminder-time.test.ts` | 测试先失败；过去时刻返回 unavailable，不补发。 | 是 | 否 |
+| T068 | [X] 实现 Reminder 目标日期/时间纯逻辑与平台 trigger 候选，不推断 Destination 时区。 | T067 | `src/features/reminders/reminder-time.ts` | T067 通过；无城市/网络/位置逻辑。 | 否 | 否 |
+| T069 | [X] 先写并实现权限流程：普通启动/浏览只查询不请求；主动 enable 才按需请求；denied/canAskAgain=false/撤销均为中文状态且 P1 可用。 | T066 | `tests/reminders/permission-flow.test.ts`, `src/features/reminders/permission.ts` | requestPermission 仅出现在明确 enable 路径。 | 否 | 否 |
+| T070 | [X] 实现平台 adapter：固定中文无用户正文 payload、稳定 identifier、repeats=false、Android channel 与 best-effort；不得申请 exact alarm。 | T066, T068, T069 | `src/features/reminders/expo-notification-adapter.ts`, `tests/reminders/notification-adapter.test.ts` | mock 验证 payload/trigger/id；无 push token/exact alarm API。 | 否 | 否 |
+| T071 | [X] 先写 ReminderCoordinator enable 测试：保存 pending/revision，取消旧 ID，再 schedule，再条件确认；失败为 error/unavailable/permission_denied 且可重试。 | T035, T070 | `tests/reminders/coordinator-enable.test.ts` | 测试先失败；OS 调用不在 DB transaction；旧 revision 不能覆盖新意图。 | 否 | 否 |
+| T072 | [X] 实现按 Trip 串行的 enable/retry 协调流程与 revision/notification_id 防旧结果覆盖。 | T071 | `src/features/reminders/reminder-coordinator.ts` | T071 通过；同 Trip/offset 最多一个有效请求。 | 否 | 否 |
+| T073 | [X] 先写并实现 disable：先保存 pending 意图、cancel 成功才确认 disabled；失败保留可重试状态，其他 offset/Trip 不受影响。 | T072 | `tests/reminders/coordinator-disable.test.ts`, `src/features/reminders/reminder-coordinator.ts` | cancel 失败不显示 disabled 成功。 | 否 | 否 |
+| T074 | [X] 先写并实现 Departure Date 修改后的 reschedule：Trip commit 不回滚；保留 offset；新目标过去则取消旧请求并标 unavailable；已送达不重复。 | T072, T050 | `tests/reminders/reschedule.test.ts`, `src/features/reminders/reminder-coordinator.ts`, `src/features/trips/EditTripScreen.tsx` | 日期更新成功而调度失败时准确分离两种结果。 | 否 | 否 |
+| T075 | [X] 先写并实现启动/前台 reconciliation：对照 SQLite 与 OS pending，修复 pending/孤儿/DB确认失败，Android 按当前时区重排 future，不补发过去提醒。 | T072 | `tests/reminders/reconciliation.test.ts`, `src/features/reminders/reconciliation.ts`, `src/features/bootstrap/*` | 重复运行幂等；时区变化无重复；旧 revision 不覆盖新状态。 | 否 | 否 |
+| T076 | [X] 将 T051 deletion port 接入真实 Reminder cancellation 与 TripRepository delete：先取消 future scheduled reminders；失败时保留全部 SQLite Trip/Checklist/Reminder；成功后执行 Repository transaction delete 与 FK cascade。注入取消后/DB删除前崩溃并由 reconciliation 恢复所需调度或完成最终删除。 | T051, T075 | `tests/reminders/trip-delete-coordination.test.ts`, `src/features/trips/useDeleteTrip.ts`, `src/features/trips/trip-deletion-port.ts` | 取消失败绝不调用 Repository delete；崩溃窗口无重复通知；历史 delivered 不阻塞删除。 | 否 | 否 |
+| T077 | [X] 实现 Trip Detail Reminder UI：7天/1天、permission denied、unavailable/error/retry、09:00说明、Android 已确认的时区/延迟限制；防重复操作。 | T073-T075, T049 | `src/features/reminders/ReminderSection.tsx`, `tests/features/reminder-section.test.tsx` | 全部自有文案简体中文；状态非仅颜色；普通渲染不弹权限。 | 否 | 否 |
+| T078 | [X] **Phase 6 Automated Validation**：运行 reminder adapter/coordinator/reconciliation/UI 与全量 JS 门禁。 | T066-T077 | Reminder | 全部自动测试通过；真实通知仍标设备验证依赖。 | 否 | 否 |
+| T079 | [X] **Phase 6 Diff Review**：核查无 remote push/token、无 exact alarm、无目的地时区、无用户正文通知、DB/OS 非事务边界正确。 | T078 | Phase 6 diff | FR-023–028b 可追踪；R1 限制未被扩大或掩盖。 | 否 | 是 |
+| T080 | [X] **Phase 6 Constitution Check**：复核 II、III、IV、V、VI、VII、IX、X、XII。 | T079 | Review record | 明确 simulator/mock 不等于真机提醒证据。 | 否 | 是 |
+| T081 | [X] **Phase 6 Human Review Checkpoint**：人工审查权限时机、平台差异文案、一致性/崩溃恢复设计。 | T080 | Review record | 批准后进入 Native/Backup；问题形成修正任务。 | 否 | 是（必须） |
 
 ## Phase 7 — Native Module / Backup Exclusion
 

@@ -5,6 +5,7 @@ import type { TripRepository } from '../../contracts/repositories';
 import type { TripInput, ValidationError } from '../../domain/types';
 import { validateEditTripInput } from '../../domain/validation';
 import { useOptionalAppDependencies } from '../bootstrap/BootstrapGate';
+import type { ReminderCoordinator } from '../reminders/reminder-coordinator';
 import { TripForm } from './TripForm';
 
 type EditState =
@@ -16,6 +17,7 @@ type EditState =
 interface EditTripScreenProps {
   tripId: string;
   repository?: TripRepository;
+  reminderCoordinator?: Pick<ReminderCoordinator, 'rescheduleForTrip'>;
   onBack: () => void;
   onSaved: (id: number) => void;
 }
@@ -26,19 +28,22 @@ function parseTripId(value: string): number | null {
   return Number.isSafeInteger(id) ? id : null;
 }
 
-export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverride, onBack, onSaved }: EditTripScreenProps) {
+export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverride, reminderCoordinator: coordinatorOverride, onBack, onSaved }: EditTripScreenProps) {
   const dependencies = useOptionalAppDependencies();
   const repository = repositoryOverride ?? dependencies?.tripRepository;
   if (!repository) throw new Error('TripRepository is unavailable before bootstrap is ready');
   const tripRepository = repository;
+  const reminderCoordinator = coordinatorOverride ?? dependencies?.reminderCoordinator;
   const tripId = parseTripId(rawTripId);
   const [state, setState] = useState<EditState>(tripId === null ? { status: 'not-found' } : { status: 'loading' });
   const [value, setValue] = useState<TripInput>({ destination: '', departureDate: '', notes: '' });
   const [errors, setErrors] = useState<ValidationError['fieldErrors']>({});
   const [submitError, setSubmitError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const [savedWithReminderError, setSavedWithReminderError] = useState(false);
   const submitting = useRef(false);
   const requestSequence = useRef(0);
+  const persistedDepartureDate = useRef<string | undefined>(undefined);
 
   const load = useCallback(async () => {
     if (tripId === null) return;
@@ -47,6 +52,7 @@ export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverri
     if (request !== requestSequence.current) return;
     if (result.ok) {
       setValue({ destination: result.value.destination, departureDate: result.value.departureDate, notes: result.value.notes });
+      persistedDepartureDate.current = result.value.departureDate;
       setState({ status: 'ready' });
     } else if (result.error.kind === 'not-found') {
       setState({ status: 'not-found' });
@@ -75,12 +81,32 @@ export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverri
       return;
     }
     submitting.current = true;
+    const departureDateChanged =
+      persistedDepartureDate.current !== validated.value.departureDate;
     setBusy(true);
     setErrors({});
     setSubmitError(undefined);
     try {
       const result = await tripRepository.update(tripId, validated.value);
-      if (result.ok) onSaved(tripId);
+      if (result.ok) {
+        persistedDepartureDate.current = result.value.departureDate;
+        if (departureDateChanged && reminderCoordinator) {
+          try {
+            const reminders = await reminderCoordinator.rescheduleForTrip(
+              tripId,
+              result.value.departureDate,
+            );
+            if (!reminders.ok) {
+              setSavedWithReminderError(true);
+              return;
+            }
+          } catch {
+            setSavedWithReminderError(true);
+            return;
+          }
+        }
+        onSaved(tripId);
+      }
       else if (result.error.kind === 'validation') setErrors(result.error.fieldErrors);
       else if (result.error.kind === 'not-found') setState({ status: 'not-found' });
       else setSubmitError('保存失败，请重试');
@@ -101,6 +127,18 @@ export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverri
       setState({ status: 'loading' });
       void load();
     }} />;
+  }
+
+  if (savedWithReminderError) {
+    return (
+      <ErrorState
+        message="旅行已保存，但提醒更新失败。请在旅行详情中重试提醒。"
+        retryLabel="返回旅行详情"
+        onRetry={() => {
+          if (tripId !== null) onSaved(tripId);
+        }}
+      />
+    );
   }
 
   return (
