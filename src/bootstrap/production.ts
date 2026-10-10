@@ -2,10 +2,9 @@ import { Platform } from 'react-native';
 
 import { createChecklistRepository } from '../data/checklist-repository';
 import { createDatabaseInitializer } from '../data/database';
-import { storageError } from '../data/errors';
 import { createExpoSqliteDriver } from '../data/expo-sqlite-adapter';
 import { migrateDatabase } from '../data/migrations';
-import type { PreparePrivateStoragePort } from '../data/private-storage';
+import { createNativePrivateStoragePort } from '../data/native-private-storage';
 import { createReminderRepository } from '../data/reminder-repository';
 import { createTripRepository } from '../data/trip-repository';
 import { createExpoNotificationAdapter } from '../features/reminders/expo-notification-adapter';
@@ -14,17 +13,8 @@ import { createReminderReconciler } from '../features/reminders/reconciliation';
 import type { BootstrapPort } from '../features/bootstrap/types';
 import { createTripDeletionPort } from '../features/trips/trip-deletion-port';
 
-const unavailablePrivateStorage: PreparePrivateStoragePort = {
-  async preparePrivateStorage() {
-    return {
-      ok: false,
-      error: storageError('private-storage-unavailable'),
-    };
-  },
-};
-
 const initializer = createDatabaseInitializer({
-  privateStorage: unavailablePrivateStorage,
+  privateStorage: createNativePrivateStoragePort(),
   driver: createExpoSqliteDriver(),
   migrate: migrateDatabase,
 });

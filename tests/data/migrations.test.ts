@@ -108,9 +108,49 @@ describe('database initialization', () => {
       'prepare',
       'open:/private/storage/trip-countdown.db',
       'migrate',
+      'prepare',
     ]);
     expect(database.executedSql[0]).toBe('PRAGMA foreign_keys = ON');
     expect(database.executedSql.at(-1)).toBe('PRAGMA journal_mode = WAL');
+  });
+
+  it('closes and fails when post-open sidecar verification fails', async () => {
+    const database = new FakeDatabaseConnection(1);
+    const preparePrivateStorage = jest
+      .fn()
+      .mockResolvedValueOnce({ ok: true, value: { directory: '/private/storage' } })
+      .mockResolvedValueOnce({ ok: false, error: storageError('private-storage-unavailable') });
+    const initializer = createDatabaseInitializer({
+      privateStorage: { preparePrivateStorage },
+      driver: { async openDatabase() { return database; } },
+      migrate: migrateDatabase,
+    });
+
+    await expect(initializer.initialize()).resolves.toMatchObject({
+      ok: false,
+      error: { code: 'private-storage-unavailable' },
+    });
+    expect(database.closeCount).toBe(1);
+    expect(initializer.getState()).toMatchObject({ status: 'failed' });
+  });
+
+  it('rejects a changed post-open directory instead of opening or falling back elsewhere', async () => {
+    const database = new FakeDatabaseConnection(1);
+    const preparePrivateStorage = jest
+      .fn()
+      .mockResolvedValueOnce({ ok: true, value: { directory: '/private/storage' } })
+      .mockResolvedValueOnce({ ok: true, value: { directory: '/different/storage' } });
+    const initializer = createDatabaseInitializer({
+      privateStorage: { preparePrivateStorage },
+      driver: { async openDatabase() { return database; } },
+      migrate: migrateDatabase,
+    });
+
+    await expect(initializer.initialize()).resolves.toMatchObject({
+      ok: false,
+      error: { code: 'private-storage-unavailable' },
+    });
+    expect(database.closeCount).toBe(1);
   });
 
   it('shares one in-flight initialization promise', async () => {

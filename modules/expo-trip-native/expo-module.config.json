@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["ExpoTripNativeModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.tripnative.ExpoTripNativeModule"]
+  }
+}

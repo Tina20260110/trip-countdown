@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065 与 Phase 6 T066–T081 已通过；已批准进入 Phase 7，但尚未执行 Phase 7。T061 真实 SQLite contract 尚未在 development build 执行；生产 Bootstrap 仍待 Phase 7 Native Private Storage，真实通知调度、离线重启恢复及设备无障碍/字体缩放证据仍待后续验证。
+**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065、Phase 6 T066–T081 与 Phase 7 T082–T094 已通过；已批准进入 Phase 8，但尚未执行 Phase 8。T061 真实 SQLite contract、Android merged development artifact、Android/iOS 原生测试与真实备份属性尚未在 development build/真机执行；通知调度、离线重启恢复及设备无障碍/字体缩放证据仍待后续验证。
 
 **约束**:
 
@@ -144,18 +144,18 @@
 
 | Task ID | Description | Dependencies | Files / Area | Validation | 可并行 | Human Review |
 |---|---|---|---|---|---|---|
-| T082 | 初始化 `modules/expo-trip-native` Local Module 与配置，暴露窄 TypeScript API `preparePrivateStorage(): Promise<{directory:string}>` 和类型化错误。 | T081 | `modules/expo-trip-native/expo-module.config.json`, `modules/expo-trip-native/src/*`, app module linking config | Typecheck 通过；接口不接收任意路径、不导入 `src/domain`。 | 否 | 是 |
-| T083 [P] | 实现 Android Kotlin `preparePrivateStorage`：固定 `noBackupFilesDir` 子目录、创建/校验、类型化失败；不实现 Trip/Checklist/Countdown/Notification。 | T082 | `modules/expo-trip-native/android/*` | Android 单元/开发构建验证返回 no-backup 路径；失败不降级。 | 是 | 否 |
-| T084 [P] | 实现 iOS Swift `preparePrivateStorage`：Application Support 专用目录；每次调用验证目录、DB 与已有 `-wal/-shm/-journal` 的 `isExcludedFromBackup`，设置后读回。 | T082 | `modules/expo-trip-native/ios/*` | 重复初始化与属性被移除后恢复测试；读回失败抛类型化错误。 | 是 | 否 |
-| T085 | 将真实 Local Module 接入 T025/T027 初始化边界，确保 backup exclusion 验证成功后才打开 DB。 | T083, T084, T027 | `src/data/private-storage.ts`, `src/data/database.ts` | 两平台失败注入均零 DB open；sidecar 与主库同一受保护路径。 | 否 | 否 |
-| T086 | 实现 Android CNG config plugin：`allowBackup=false`、旧版 `fullBackupContent`、Android 12+ `dataExtractionRules`，排除 cloud-backup/device-transfer 的 file/database/sharedpref 等适用域。 | T083 | `plugins/withBackupExclusion.*`, backup XML templates, `app.json` | plugin 测试验证 app config 与 XML；覆盖 expo-notifications SharedPreferences。 | 否 | 是 |
-| T087 | 增加 clean checkout CNG 验证脚本/说明：隔离目录两次 `expo prebuild --clean`，检查生成 manifest、backup rules、Local Module linking；不依赖手改 `android/ios`。 | T086, T085 | `scripts/verify-prebuild.*` 或 `tests/native-config/*`, quickstart 实施补充 | 两次生成结果等价；生成工程无手工 source-of-truth。 | 否 | 是 |
-| T088 | 检查 Android merged manifest/backup XML：allowBackup、fullBackupContent、dataExtractionRules、无 exact alarm 与无无关敏感权限。 | T087, T070 | `tests/native-config/android-*`, validation record | 实际 development build artifact 检查通过或明确记录待构建。 | 否 | 是 |
-| T089 | 检查 iOS Application Support 路径和每次初始化 backup resource values；确认 DB/WAL/SHM/journal 不位于 Caches/tmp 或默认未保护目录。 | T085 | `tests/device/backup-exclusion/ios-*`, validation record | development build 读回属性；模拟器结果不替代最终真机 restore。 | 否 | 是 |
-| T091 | **Phase 7 Automated Validation**：运行 JS 门禁、module typecheck/plugin tests、可用的 prebuild 检查。 | T082-T089 | Native/Backup | 自动项通过；需账户/真机项准确标记 later。 | 否 | 否 |
-| T092 | **Phase 7 Diff Review**：核查 Native Boundary、CNG 可重现、无业务重复、无手工原生补丁。 | T091 | Phase 7 diff | FR-017a 实现链可追踪；standalone publish 未进入范围。 | 否 | 是 |
-| T093 | **Phase 7 Constitution Check**：复核 III、V、IX、X、XII。 | T092 | Review record | 无静默 fallback 或备份保护假设。 | 否 | 是 |
-| T094 | **Phase 7 Human Review Checkpoint**：人工审查 Kotlin/Swift/plugin、生成 manifest 与备份边界。 | T093 | Review record | 批准后进入跨功能整合。 | 否 | 是（必须） |
+| T082 | [X] 初始化 `modules/expo-trip-native` Local Module 与配置，暴露窄 TypeScript API `preparePrivateStorage(): Promise<{directory:string}>` 和类型化错误。 | T081 | `modules/expo-trip-native/expo-module.config.json`, `modules/expo-trip-native/src/*`, app module linking config | Typecheck 通过；接口不接收任意路径、不导入 `src/domain`。 | 否 | 是 |
+| T083 [P] | [X] 实现 Android Kotlin `preparePrivateStorage`：固定 `noBackupFilesDir` 子目录、创建/校验、类型化失败；不实现 Trip/Checklist/Countdown/Notification。 | T082 | `modules/expo-trip-native/android/*` | Android 单元/开发构建验证返回 no-backup 路径；失败不降级。 | 是 | 否 |
+| T084 [P] | [X] 实现 iOS Swift `preparePrivateStorage`：Application Support 专用目录；每次调用验证目录、DB 与已有 `-wal/-shm/-journal` 的 `isExcludedFromBackup`，设置后读回。 | T082 | `modules/expo-trip-native/ios/*` | 重复初始化与属性被移除后恢复测试；读回失败抛类型化错误。 | 是 | 否 |
+| T085 | [X] 将真实 Local Module 接入 T025/T027 初始化边界，确保 backup exclusion 验证成功后才打开 DB。 | T083, T084, T027 | `src/data/private-storage.ts`, `src/data/database.ts` | 两平台失败注入均零 DB open；sidecar 与主库同一受保护路径。 | 否 | 否 |
+| T086 | [X] 实现 Android CNG config plugin：`allowBackup=false`、旧版 `fullBackupContent`、Android 12+ `dataExtractionRules`，排除 cloud-backup/device-transfer 的 file/database/sharedpref 等适用域。 | T083 | `plugins/withBackupExclusion.*`, backup XML templates, `app.json` | plugin 测试验证 app config 与 XML；覆盖 expo-notifications SharedPreferences。 | 否 | 是 |
+| T087 | [X] 增加 clean checkout CNG 验证脚本/说明：隔离目录两次 `expo prebuild --clean`，检查生成 manifest、backup rules、Local Module linking；不依赖手改 `android/ios`。 | T086, T085 | `scripts/verify-prebuild.*` 或 `tests/native-config/*`, quickstart 实施补充 | 两次生成结果等价；生成工程无手工 source-of-truth。 | 否 | 是 |
+| T088 | [X] 检查 Android merged manifest/backup XML：allowBackup、fullBackupContent、dataExtractionRules、无 exact alarm 与无无关敏感权限。 | T087, T070 | `tests/native-config/android-*`, validation record | 实际 development build artifact 检查通过或明确记录待构建。 | 否 | 是 |
+| T089 | [X] 检查 iOS Application Support 路径和每次初始化 backup resource values；确认 DB/WAL/SHM/journal 不位于 Caches/tmp 或默认未保护目录。 | T085 | `tests/device/backup-exclusion/ios-*`, validation record | development build 读回属性；模拟器结果不替代最终真机 restore。 | 否 | 是 |
+| T091 | [X] **Phase 7 Automated Validation**：运行 JS 门禁、module typecheck/plugin tests、可用的 prebuild 检查。 | T082-T089 | Native/Backup | 自动项通过；需账户/真机项准确标记 later。 | 否 | 否 |
+| T092 | [X] **Phase 7 Diff Review**：核查 Native Boundary、CNG 可重现、无业务重复、无手工原生补丁。 | T091 | Phase 7 diff | FR-017a 实现链可追踪；standalone publish 未进入范围。 | 否 | 是 |
+| T093 | [X] **Phase 7 Constitution Check**：复核 III、V、IX、X、XII。 | T092 | Review record | 无静默 fallback 或备份保护假设。 | 否 | 是 |
+| T094 | [X] **Phase 7 Human Review Checkpoint**：人工审查 Kotlin/Swift/plugin、生成 manifest 与备份边界。 | T093 | Review record | 批准后进入跨功能整合。 | 否 | 是（必须） |
 
 ## Phase 8 — Integration / Error / Accessibility
 

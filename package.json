@@ -44,7 +44,9 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:ci": "jest --ci --runInBand"
+    "test:ci": "jest --ci --runInBand",
+    "verify:prebuild": "node scripts/verify-prebuild.mjs",
+    "verify:android-artifact": "node scripts/verify-android-artifact.mjs"
   },
   "private": true
 }

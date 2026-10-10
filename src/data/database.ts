@@ -155,6 +155,28 @@ export function createDatabaseInitializer({
       return { ok: false, error };
     }
 
+    // Opening SQLite may create the database and WAL/SHM files. Re-run the
+    // idempotent native verification so newly created files are protected too.
+    state = { status: 'preparing-private-storage' };
+    let verified;
+    try {
+      verified = await privateStorage.preparePrivateStorage();
+    } catch {
+      verified = { ok: false as const, error: storageError('private-storage-unavailable') };
+    }
+    if (
+      !verified.ok ||
+      verified.value.directory.trim() === '' ||
+      verified.value.directory !== prepared.value.directory
+    ) {
+      const error = verified.ok
+        ? storageError('private-storage-unavailable')
+        : verified.error;
+      await closeFailedConnection();
+      state = { status: 'failed', error };
+      return { ok: false, error };
+    }
+
     state = { status: 'ready', connection };
     ready = { ok: true, value: connection };
     return ready;

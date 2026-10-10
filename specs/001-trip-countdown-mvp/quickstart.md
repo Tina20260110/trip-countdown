@@ -30,7 +30,9 @@ eas build --profile development --platform ios
 npx expo start --dev-client
 ```
 
-本机构建可使用 npx expo run:android / npx expo run:ios。Local Module/plugin变更后重建。用隔离干净 checkout 两次执行 npx expo prebuild --clean，比较生成 manifest/backup XML/模块链接，不在存在手工原生修改的工作目录执行 clean。不得在这个规划阶段运行构建或安装依赖。
+本机构建可使用 npx expo run:android / npx expo run:ios。Local Module/plugin变更后重建。执行 `npm run verify:prebuild` 会复制源码到隔离临时目录，按 Expo SDK 57 的默认 clean 行为（不传 `--no-clean`）连续两次执行 prebuild，并比较生成 manifest、backup XML 与模块链接基础文件；不得把生成的 `android/`、`ios/` 作为源码提交或手工维护。该检查证明 CNG 可重复生成，不等同于编译、安装、系统备份恢复或真机验证。
+
+Development Build 生成 Android merged manifest 后，执行 `npm run verify:android-artifact -- <merged-manifest> <backup_rules.xml> <data_extraction_rules.xml>`。Android 备份/迁移和 iOS backup resource-value 读回步骤见 `tests/device/backup-exclusion/README.md`；未在指定构建和设备上实际执行时保持 PENDING，Jest 与 prebuild 输出不是设备证据。
 
 在非发布测试入口执行 tests/device 中同一 Repository 契约：实际 expo-sqlite 创建/读回/更新/删除、close/reopen、foreign key cascade、迁移回滚、已知高版本拒绝。生产路由树不含验证入口。记录设备/OS/构建/结果；只跑 Jest mock 不通过此项。
 
