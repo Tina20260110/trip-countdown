@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, ErrorState, LoadingState } from '../../components/AsyncState';
+import { UI_MESSAGES } from '../../components/ui-messages';
 import type { ChecklistRepository, ReminderRepository, TripRepository } from '../../contracts/repositories';
 import { calculateCountdown } from '../../domain/countdown';
 import { getLocalDateOnly } from '../../domain/date-only';
@@ -71,7 +72,13 @@ export function TripDetailScreen({
   const load = useCallback(async () => {
     if (tripId === null) return;
     const request = ++requestSequence.current;
-    const result = await tripRepository.get(tripId);
+    let result: Awaited<ReturnType<TripRepository['get']>>;
+    try {
+      result = await tripRepository.get(tripId);
+    } catch {
+      if (request === requestSequence.current) setState({ status: 'error' });
+      return;
+    }
     if (request !== requestSequence.current) return;
     if (result.ok) setState({ status: 'ready', trip: result.value });
     else if (result.error.kind === 'not-found') setState({ status: 'not-found' });
@@ -104,7 +111,7 @@ export function TripDetailScreen({
     return <MessageWithAction message="旅行不存在" action="返回旅行列表" onPress={onBack} />;
   }
   if (state.status === 'error') {
-    return <ErrorState message="读取旅行失败，请重试" onRetry={() => {
+    return <ErrorState message={UI_MESSAGES.tripRead} onRetry={() => {
       setState({ status: 'loading' });
       void load();
     }} />;
@@ -140,7 +147,7 @@ export function TripDetailScreen({
         <View style={styles.confirmation}>
           <Text style={styles.confirmationTitle}>确定删除这次旅行吗？</Text>
           <Text style={styles.value}>删除后无法恢复。</Text>
-          {deletion.error ? <Text accessibilityRole="alert" style={styles.error}>删除未完成，请重试</Text> : null}
+          {deletion.error ? <Text accessibilityRole="alert" style={styles.error}>{UI_MESSAGES.tripDelete}</Text> : null}
           <View style={styles.actions}>
             <ActionButton label="取消删除" disabled={deletion.isDeleting} onPress={deletion.cancelDelete} />
             <ActionButton

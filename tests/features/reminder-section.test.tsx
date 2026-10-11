@@ -87,4 +87,16 @@ describe('ReminderSection', () => {
     await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
     expect(await screen.findByRole('button', { name: '开启提前 7 天提醒' })).toBeTruthy();
   });
+
+  it('turns a rejected read into a safe retryable error', async () => {
+    const list = jest.fn()
+      .mockRejectedValueOnce(new Error('SELECT /private Tokyo'))
+      .mockResolvedValueOnce({ ok: true, value: [] });
+    const repository = { list, get: jest.fn(), create: jest.fn(), updateIfRevision: jest.fn() } as ReminderRepository;
+    await render(<ReminderSection tripId={1} departureDate="2026-10-20" repository={repository} coordinator={coordinator()} />);
+    expect(await screen.findByRole('alert')).toHaveTextContent('读取提醒失败，请重试');
+    expect(screen.queryByText(/SELECT|private|Tokyo/)).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: '重试' }));
+    expect(await screen.findByRole('button', { name: '开启提前 7 天提醒' })).toBeTruthy();
+  });
 });

@@ -21,6 +21,7 @@ export function ChecklistItemRow({ item, toggleBusy, deleteBusy, disabled, onSet
         accessibilityRole="checkbox"
         accessibilityState={{ checked: item.completed, disabled, busy: toggleBusy }}
         disabled={disabled}
+        focusable={!disabled}
         onPress={() => onSetCompleted(!item.completed)}
         style={({ pressed }) => [styles.checkbox, pressed && !disabled && styles.pressed]}>
         <Text style={styles.mark}>{item.completed ? '✓' : '○'}</Text>

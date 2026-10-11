@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type RefObject } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,13 +10,20 @@ import {
 interface FormFieldProps
   extends Pick<
     TextInputProps,
-    'autoCapitalize' | 'keyboardType' | 'multiline' | 'placeholder'
+    | 'autoCapitalize'
+    | 'keyboardType'
+    | 'multiline'
+    | 'onSubmitEditing'
+    | 'placeholder'
+    | 'returnKeyType'
+    | 'submitBehavior'
   > {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
   error?: string;
   disabled?: boolean;
+  inputRef?: RefObject<TextInput | null>;
 }
 
 export function FormField({
@@ -25,6 +32,7 @@ export function FormField({
   onChangeText,
   error,
   disabled = false,
+  inputRef,
   ...inputProps
 }: FormFieldProps) {
   const fieldId = useId();
@@ -42,6 +50,7 @@ export function FormField({
         accessibilityLabelledBy={fieldId}
         accessibilityState={{ disabled }}
         editable={!disabled}
+        focusable={!disabled}
         onChangeText={onChangeText}
         style={[
           styles.input,
@@ -50,6 +59,7 @@ export function FormField({
           disabled && styles.disabled,
         ]}
         value={value}
+        ref={inputRef}
       />
       {error ? (
         <Text nativeID={errorId} accessibilityRole="alert" style={styles.error}>

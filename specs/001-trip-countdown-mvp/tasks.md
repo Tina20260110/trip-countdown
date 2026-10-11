@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065、Phase 6 T066–T081 与 Phase 7 T082–T094 已通过；已批准进入 Phase 8，但尚未执行 Phase 8。T061 真实 SQLite contract、Android merged development artifact、Android/iOS 原生测试与真实备份属性尚未在 development build/真机执行；通知调度、离线重启恢复及设备无障碍/字体缩放证据仍待后续验证。
+**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065、Phase 6 T066–T081、Phase 7 T082–T094 与 Phase 8 T095–T104A 已通过；已批准进入 Phase 9，但尚未执行 Phase 9。T061 真实 SQLite contract、Android merged development artifact、Android/iOS 原生测试与真实备份属性尚未在 development build/真机执行；通知调度、断网冷启动/离线重启恢复、网络抓包、外接键盘及设备无障碍/字体缩放证据仍待后续验证。
 
 **约束**:
 
@@ -163,17 +163,17 @@
 
 | Task ID | Description | Dependencies | Files / Area | Validation | 可并行 | Human Review |
 |---|---|---|---|---|---|---|
-| T095 | 建立端到端 RNTL 集成测试：Trips/Create/Detail/Edit/Checklist/Reminder 的 Loading、Empty、Error、Validation、Retry 与防重复提交。 | T094 | `tests/features/app-flows.test.tsx`, shared test adapters | 所有异步分支有终态；无空白页、假 Empty、假成功。 | 否 | 否 |
-| T096 | 实现统一安全错误呈现与重试连接，确保 SQL、路径、Trip/Notes/Checklist 内容不进入 UI/远程日志。 | T095 | `src/components/*`, `src/features/**/*` | 错误注入快照/文本检查只含安全中文消息。 | 否 | 否 |
-| T097 [P] | 完成 accessibility 自动检查：全部 button/checkbox 的 name/role/checked/disabled，错误读屏可感知，完成/提醒状态不只靠颜色。 | T094 | `tests/accessibility/components.test.tsx`, UI components | RNTL accessibility queries 全过。 | 是 | 否 |
-| T098 | 调整核心布局支持系统字体缩放、换行/滚动与触控尺寸；不设置阻止字体缩放属性。 | T097 | `src/components/*`, `src/features/**/*`, styles | 最大受支持字体设置下关键信息/操作无阻断；设备验证任务关联 T138/T139。 | 否 | 是 |
-| T099 | 验证外接键盘焦点顺序与激活契约，补齐可测试的 focus/submit 行为，不新增桌面/Web 产品范围。 | T098 | UI components, `tests/accessibility/keyboard.test.tsx` | 创建、事项、编辑、删除可按契约完成；Web 仍非交付目标。 | 否 | 是 |
-| T100 | 执行离线集成测试：禁网下 Trip CRUD、Countdown、Checklist；确认无后端、Analytics、业务上传或运行时网络前置。 | T095, T096 | Integration tests / validation record | SC-003 自动/模拟验证通过；真实 production 离线留 Phase 11。 | 否 | 是 |
-| T101 | 审查隐私依赖与代码：不配置 Firebase project，不使用 Analytics/Crashlytics/Firestore/Auth/FCM Remote Push、不获取 push token；检查 expo-notifications 传递依赖并记录接受边界。 | T066, T088 | `package-lock.json`, dependency report, source scan | 仅允许已知 Firebase Messaging 传递依赖且无产品级配置/调用。 | 否 | 是 |
-| T102 | **Phase 8 Automated Validation**：运行全量 lint/typecheck/test:ci、独立 TZ 测试和 privacy source scan。 | T095-T101 | 全仓库 JS/TS | 全部通过并记录；设备检查状态单列。 | 否 | 否 |
-| T103 | **Phase 8 Diff Review**：对照 quickstart P1/P2 场景审查错误、离线、中文与 accessibility 覆盖。 | T102 | Phase 8 diff | FR-017、019–022、029–033、036 可追踪。 | 否 | 是 |
-| T104 | **Phase 8 Constitution Check**：复核全部十二原则，确认集成状态与未完成设备证据准确。 | T103 | Constitution review record | 无未记录违反项；真机项明确未完成而非失败。 | 否 | 是 |
-| T104A | **Phase 8 Human Review Checkpoint**：人工确认跨层错误、离线、隐私和 accessibility 行为后进入构建阶段。 | T104 | Review record | 记录人工结论；未批准不得进入 Phase 9。 | 否 | 是（必须） |
+| T095 | [X] 建立端到端 RNTL 集成测试：Trips/Create/Detail/Edit/Checklist/Reminder 的 Loading、Empty、Error、Validation、Retry 与防重复提交。 | T094 | `tests/features/app-flows.test.tsx`, shared test adapters | 所有异步分支有终态；无空白页、假 Empty、假成功。 | 否 | 否 |
+| T096 | [X] 实现统一安全错误呈现与重试连接，确保 SQL、路径、Trip/Notes/Checklist 内容不进入 UI/远程日志。 | T095 | `src/components/*`, `src/features/**/*` | 错误注入快照/文本检查只含安全中文消息。 | 否 | 否 |
+| T097 [P] | [X] 完成 accessibility 自动检查：全部 button/checkbox 的 name/role/checked/disabled，错误读屏可感知，完成/提醒状态不只靠颜色。 | T094 | `tests/accessibility/components.test.tsx`, UI components | RNTL accessibility queries 全过。 | 是 | 否 |
+| T098 | [X] 调整核心布局支持系统字体缩放、换行/滚动与触控尺寸；不设置阻止字体缩放属性。 | T097 | `src/components/*`, `src/features/**/*`, styles | 最大受支持字体设置下关键信息/操作无阻断；设备验证任务关联 T138/T139。 | 否 | 是 |
+| T099 | [X] 验证外接键盘焦点顺序与激活契约，补齐可测试的 focus/submit 行为，不新增桌面/Web 产品范围。 | T098 | UI components, `tests/accessibility/keyboard.test.tsx` | 创建、事项、编辑、删除可按契约完成；Web 仍非交付目标。 | 否 | 是 |
+| T100 | [X] 执行离线集成测试：禁网下 Trip CRUD、Countdown、Checklist；确认无后端、Analytics、业务上传或运行时网络前置。 | T095, T096 | Integration tests / validation record | SC-003 自动/模拟验证通过；真实 production 离线留 Phase 11。 | 否 | 是 |
+| T101 | [X] 审查隐私依赖与代码：不配置 Firebase project，不使用 Analytics/Crashlytics/Firestore/Auth/FCM Remote Push、不获取 push token；检查 expo-notifications 传递依赖并记录接受边界。 | T066, T088 | `package-lock.json`, dependency report, source scan | 仅允许已知 Firebase Messaging 传递依赖且无产品级配置/调用。 | 否 | 是 |
+| T102 | [X] **Phase 8 Automated Validation**：运行全量 lint/typecheck/test:ci、独立 TZ 测试和 privacy source scan。 | T095-T101 | 全仓库 JS/TS | 全部通过并记录；设备检查状态单列。 | 否 | 否 |
+| T103 | [X] **Phase 8 Diff Review**：对照 quickstart P1/P2 场景审查错误、离线、中文与 accessibility 覆盖。 | T102 | Phase 8 diff | FR-017、019–022、029–033、036 可追踪。 | 否 | 是 |
+| T104 | [X] **Phase 8 Constitution Check**：复核全部十二原则，确认集成状态与未完成设备证据准确。 | T103 | Constitution review record | 无未记录违反项；真机项明确未完成而非失败。 | 否 | 是 |
+| T104A | [X] **Phase 8 Human Review Checkpoint**：人工确认跨层错误、离线、隐私和 accessibility 行为后进入构建阶段。 | T104 | Review record | 记录人工结论；未批准不得进入 Phase 9。 | 否 | 是（必须） |
 
 ## Phase 9 — CI / Development Build / Preview
 

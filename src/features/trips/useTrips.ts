@@ -55,7 +55,15 @@ export function useTrips(
   const refresh = useCallback(async () => {
     const request = ++requestSequence.current;
     const localToday = getLocalDateOnly(getNow()).value;
-    const result = await repository.list(localToday);
+    let result: Awaited<ReturnType<TripRepository['list']>>;
+    try {
+      result = await repository.list(localToday);
+    } catch {
+      if (mounted.current && request === requestSequence.current) {
+        setState({ status: 'error' });
+      }
+      return;
+    }
     if (!mounted.current || request !== requestSequence.current) return;
     setState(
       result.ok

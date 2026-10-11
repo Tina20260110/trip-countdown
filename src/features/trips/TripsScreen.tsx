@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { TripRepository } from '../../contracts/repositories';
 import { ActionButton, EmptyState, ErrorState, LoadingState } from '../../components/AsyncState';
+import { UI_MESSAGES } from '../../components/ui-messages';
 import { calculateCountdown } from '../../domain/countdown';
 import { formatChecklistProgress } from '../../domain/checklist-progress';
 import { parseDateOnly } from '../../domain/date-only';
@@ -35,6 +36,7 @@ function TripCard({ trip, localToday, onPress }: {
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      focusable
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <Text style={styles.destination}>{trip.destination}</Text>
@@ -68,7 +70,7 @@ export function TripsScreen({
 
   if (state.status === 'loading') return <LoadingState message="正在加载旅行" />;
   if (state.status === 'error') {
-    return <ErrorState message="读取旅行失败，请重试" onRetry={retry} />;
+    return <ErrorState message={UI_MESSAGES.tripRead} onRetry={retry} />;
   }
 
   if (state.trips.length === 0) {

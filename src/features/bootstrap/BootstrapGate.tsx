@@ -10,6 +10,7 @@ import {
 import { AppState } from 'react-native';
 
 import { ErrorState, LoadingState } from '../../components/AsyncState';
+import { UI_MESSAGES } from '../../components/ui-messages';
 import type {
   AppDependencies,
   BootstrapPort,
@@ -83,7 +84,7 @@ export function BootstrapGate({ bootstrap, children }: BootstrapGateProps) {
 
   if (state.status === 'initializing') return <LoadingState />;
   if (state.status === 'failed') {
-    return <ErrorState message="读取失败，请重试" onRetry={initialize} />;
+    return <ErrorState message={UI_MESSAGES.bootstrapRead} onRetry={initialize} />;
   }
 
   return (

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, ErrorState, LoadingState } from '../../components/AsyncState';
+import { UI_MESSAGES } from '../../components/ui-messages';
 import type { ReminderRepository } from '../../contracts/repositories';
 import type { Reminder, ReminderOffset } from '../../domain/types';
 import { useOptionalAppDependencies } from '../bootstrap/BootstrapGate';
@@ -44,7 +45,13 @@ export function ReminderSection({
 
   const load = useCallback(async () => {
     const request = ++sequence.current;
-    const result = await repository.list(tripId);
+    let result: Awaited<ReturnType<ReminderRepository['list']>>;
+    try {
+      result = await repository.list(tripId);
+    } catch {
+      if (request === sequence.current) setState({ status: 'error', tripId });
+      return;
+    }
     if (request !== sequence.current) return;
     setState(result.ok
       ? { status: 'ready', tripId, reminders: result.value }
@@ -61,18 +68,23 @@ export function ReminderSection({
     mutationGuard.current = true;
     setBusyOffset(offset);
     setOperationError(null);
-    const result = current?.enabled && current.status === 'scheduled'
-      ? await coordinator.disable(tripId, offset)
-      : await coordinator.enable({ tripId, offsetDays: offset, departureDate });
-    if (!result.ok) setOperationError(offset);
-    await load();
-    mutationGuard.current = false;
-    setBusyOffset(null);
+    try {
+      const result = current?.enabled && current.status === 'scheduled'
+        ? await coordinator.disable(tripId, offset)
+        : await coordinator.enable({ tripId, offsetDays: offset, departureDate });
+      if (!result.ok) setOperationError(offset);
+      await load();
+    } catch {
+      setOperationError(offset);
+    } finally {
+      mutationGuard.current = false;
+      setBusyOffset(null);
+    }
   }, [coordinator, departureDate, load, tripId]);
 
   if (state.status === 'loading' || state.tripId !== tripId) return <LoadingState message="正在加载提醒" />;
   if (state.status === 'error') {
-    return <ErrorState message="读取提醒失败，请重试" onRetry={() => { setState({ status: 'loading' }); void load(); }} />;
+    return <ErrorState message={UI_MESSAGES.reminderRead} onRetry={() => { setState({ status: 'loading' }); void load(); }} />;
   }
 
   return (
@@ -101,9 +113,9 @@ export function ReminderSection({
 function ReminderStatusText({ reminder, operationFailed }: { reminder?: Reminder; operationFailed: boolean }) {
   let label = '未开启';
   let alert = false;
-  if (operationFailed || reminder?.status === 'error') { label = '提醒更新失败，请重试'; alert = true; }
-  else if (reminder?.status === 'permission_denied') { label = '通知权限未开启，提醒未启用'; alert = true; }
-  else if (reminder?.status === 'unavailable') { label = '当前无法安排提醒'; alert = true; }
+  if (operationFailed || reminder?.status === 'error') { label = UI_MESSAGES.reminderUpdate; alert = true; }
+  else if (reminder?.status === 'permission_denied') { label = UI_MESSAGES.reminderPermissionDenied; alert = true; }
+  else if (reminder?.status === 'unavailable') { label = UI_MESSAGES.reminderUnavailable; alert = true; }
   else if (reminder?.status === 'pending') label = '正在更新';
   else if (reminder?.status === 'scheduled') label = '已安排';
   return <Text accessibilityRole={alert ? 'alert' : undefined} style={[styles.status, alert && styles.error]}>{label}</Text>;

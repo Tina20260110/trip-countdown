@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 
 import type { TripRepository } from '../../contracts/repositories';
+import { UI_MESSAGES, type SafeUiMessage } from '../../components/ui-messages';
 import { getLocalDateOnly } from '../../domain/date-only';
 import type { TripInput, ValidationError } from '../../domain/types';
 import { validateCreateTripInput } from '../../domain/validation';
@@ -23,7 +24,7 @@ export function CreateTripScreen({ repository: repositoryOverride, getNow = getS
   const tripRepository = repository;
   const [value, setValue] = useState<TripInput>(emptyTrip);
   const [errors, setErrors] = useState<ValidationError['fieldErrors']>({});
-  const [submitError, setSubmitError] = useState<string>();
+  const [submitError, setSubmitError] = useState<SafeUiMessage>();
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
 
@@ -48,10 +49,10 @@ export function CreateTripScreen({ repository: repositoryOverride, getNow = getS
       } else if (result.error.kind === 'validation') {
         setErrors(result.error.fieldErrors);
       } else {
-        setSubmitError('保存失败，请重试');
+        setSubmitError(UI_MESSAGES.tripSave);
       }
     } catch {
-      setSubmitError('保存失败，请重试');
+      setSubmitError(UI_MESSAGES.tripSave);
     } finally {
       submitting.current = false;
       setBusy(false);

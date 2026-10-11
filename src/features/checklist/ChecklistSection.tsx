@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, EmptyState, ErrorState, LoadingState } from '../../components/AsyncState';
 import { FormField } from '../../components/FormField';
+import { UI_MESSAGES } from '../../components/ui-messages';
 import type { ChecklistRepository } from '../../contracts/repositories';
 import { calculateChecklistProgress } from '../../domain/checklist-progress';
 import { useOptionalAppDependencies } from '../bootstrap/BootstrapGate';
@@ -28,7 +29,7 @@ function ChecklistForTrip({ tripId, repository }: { tripId: number; repository: 
     return <LoadingState message="正在加载准备事项" />;
   }
   if (checklist.state.status === 'read-error') {
-    return <ErrorState message="读取准备事项失败，请重试" onRetry={checklist.retryRead} />;
+    return <ErrorState message={UI_MESSAGES.checklistRead} onRetry={checklist.retryRead} />;
   }
 
   const refreshFailed = checklist.state.status === 'refresh-error';
@@ -41,7 +42,7 @@ function ChecklistForTrip({ tripId, repository }: { tripId: number; repository: 
       <Text style={styles.heading}>准备事项</Text>
       {refreshFailed ? (
         <ErrorState
-          message={checklist.state.status === 'refresh-error' ? checklist.state.message : '列表刷新失败，请重试'}
+          message={checklist.state.status === 'refresh-error' ? checklist.state.message : UI_MESSAGES.checklistRefresh}
           retryLabel="重新读取"
           onRetry={checklist.retryRead}
         />
@@ -66,7 +67,7 @@ function ChecklistForTrip({ tripId, repository }: { tripId: number; repository: 
           {checklist.mutationError ? (
             <View style={styles.mutationError}>
               <Text accessibilityRole="alert" style={styles.error}>
-                {checklist.mutationError.kind === 'delete' ? '删除事项失败，请重试' : '更新事项失败，请重试'}
+                {checklist.mutationError.kind === 'delete' ? UI_MESSAGES.checklistDelete : UI_MESSAGES.checklistUpdate}
               </Text>
               <ActionButton
                 label={checklist.mutationError.kind === 'delete' ? '重试删除事项' : '重试更新状态'}
@@ -83,6 +84,9 @@ function ChecklistForTrip({ tripId, repository }: { tripId: number; repository: 
           onChangeText={checklist.setTitle}
           error={checklist.titleError}
           disabled={checklist.saving || refreshFailed || mutationActive}
+          returnKeyType="done"
+          submitBehavior="submit"
+          onSubmitEditing={checklist.add}
         />
         {checklist.addError ? (
           <Text accessibilityRole="alert" style={styles.error}>{checklist.addError}</Text>

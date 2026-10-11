@@ -77,6 +77,7 @@ export function ActionButton({
       accessibilityRole="button"
       accessibilityState={{ busy, disabled: unavailable }}
       disabled={unavailable}
+      focusable={!unavailable}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
@@ -105,10 +106,12 @@ const styles = StyleSheet.create({
     color: '#8A1C1C',
   },
   button: {
+    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,
     minWidth: 48,
+    maxWidth: '100%',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -124,5 +127,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

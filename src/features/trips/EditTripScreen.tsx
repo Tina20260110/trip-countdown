@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ErrorState, LoadingState } from '../../components/AsyncState';
+import { UI_MESSAGES, type SafeUiMessage } from '../../components/ui-messages';
 import type { TripRepository } from '../../contracts/repositories';
 import type { TripInput, ValidationError } from '../../domain/types';
 import { validateEditTripInput } from '../../domain/validation';
@@ -38,7 +39,7 @@ export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverri
   const [state, setState] = useState<EditState>(tripId === null ? { status: 'not-found' } : { status: 'loading' });
   const [value, setValue] = useState<TripInput>({ destination: '', departureDate: '', notes: '' });
   const [errors, setErrors] = useState<ValidationError['fieldErrors']>({});
-  const [submitError, setSubmitError] = useState<string>();
+  const [submitError, setSubmitError] = useState<SafeUiMessage>();
   const [busy, setBusy] = useState(false);
   const [savedWithReminderError, setSavedWithReminderError] = useState(false);
   const submitting = useRef(false);
@@ -48,7 +49,13 @@ export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverri
   const load = useCallback(async () => {
     if (tripId === null) return;
     const request = ++requestSequence.current;
-    const result = await tripRepository.get(tripId);
+    let result: Awaited<ReturnType<TripRepository['get']>>;
+    try {
+      result = await tripRepository.get(tripId);
+    } catch {
+      if (request === requestSequence.current) setState({ status: 'error' });
+      return;
+    }
     if (request !== requestSequence.current) return;
     if (result.ok) {
       setValue({ destination: result.value.destination, departureDate: result.value.departureDate, notes: result.value.notes });
@@ -109,9 +116,9 @@ export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverri
       }
       else if (result.error.kind === 'validation') setErrors(result.error.fieldErrors);
       else if (result.error.kind === 'not-found') setState({ status: 'not-found' });
-      else setSubmitError('保存失败，请重试');
+      else setSubmitError(UI_MESSAGES.tripSave);
     } catch {
-      setSubmitError('保存失败，请重试');
+      setSubmitError(UI_MESSAGES.tripSave);
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -120,10 +127,10 @@ export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverri
 
   if (state.status === 'loading') return <LoadingState message="正在加载旅行" />;
   if (state.status === 'not-found') {
-    return <ErrorState message="旅行不存在" retryLabel="返回旅行详情" onRetry={onBack} />;
+    return <ErrorState message={UI_MESSAGES.tripNotFound} retryLabel="返回旅行详情" onRetry={onBack} />;
   }
   if (state.status === 'error') {
-    return <ErrorState message="读取旅行失败，请重试" onRetry={() => {
+    return <ErrorState message={UI_MESSAGES.tripRead} onRetry={() => {
       setState({ status: 'loading' });
       void load();
     }} />;
@@ -132,7 +139,7 @@ export function EditTripScreen({ tripId: rawTripId, repository: repositoryOverri
   if (savedWithReminderError) {
     return (
       <ErrorState
-        message="旅行已保存，但提醒更新失败。请在旅行详情中重试提醒。"
+        message={UI_MESSAGES.tripSavedReminderFailed}
         retryLabel="返回旅行详情"
         onRetry={() => {
           if (tripId !== null) onSaved(tripId);

@@ -11,6 +11,23 @@ const updatedTrip: Trip = {
 };
 
 describe('EditTripScreen', () => {
+  it('turns a rejected initial read into a safe retryable error', async () => {
+    const get = jest.fn<ReturnType<TripRepository['get']>, Parameters<TripRepository['get']>>()
+      .mockRejectedValueOnce(new Error('SELECT /private Tokyo Notes'))
+      .mockResolvedValueOnce({ ok: true, value: detail() });
+    await render(
+      <EditTripScreen
+        tripId="7"
+        repository={repositoryWithGet(get)}
+        onBack={jest.fn()}
+        onSaved={jest.fn()}
+      />,
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('读取旅行失败，请重试');
+    expect(screen.queryByText(/SELECT|private|Tokyo|Notes/)).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: '重试' }));
+    expect(await screen.findByDisplayValue('东京')).toBeTruthy();
+  });
   it('loads persisted values and allows a valid past date', async () => {
     const update = jest.fn<ReturnType<TripRepository['update']>, Parameters<TripRepository['update']>>()
       .mockResolvedValue({ ok: true, value: updatedTrip });

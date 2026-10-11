@@ -46,7 +46,8 @@
     "test": "jest",
     "test:ci": "jest --ci --runInBand",
     "verify:prebuild": "node scripts/verify-prebuild.mjs",
-    "verify:android-artifact": "node scripts/verify-android-artifact.mjs"
+    "verify:android-artifact": "node scripts/verify-android-artifact.mjs",
+    "verify:privacy": "node scripts/verify-privacy.mjs"
   },
   "private": true
 }

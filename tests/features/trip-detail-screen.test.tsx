@@ -89,6 +89,27 @@ describe('TripDetailScreen', () => {
     expect(await screen.findByText('旅行不存在')).toBeTruthy();
   });
 
+  it('turns a rejected read into a safe retryable error', async () => {
+    const get = jest.fn<ReturnType<TripRepository['get']>, Parameters<TripRepository['get']>>()
+      .mockRejectedValueOnce(new Error('SELECT /private Tokyo Notes'))
+      .mockResolvedValueOnce({ ok: true, value: detail() });
+    await render(
+      <TripDetailScreen
+        tripId="7"
+        repository={repositoryWithGet(get)}
+        checklistRepository={emptyChecklistRepository()}
+        getNow={() => new Date(2026, 9, 8)}
+        onBack={jest.fn()}
+        onEdit={jest.fn()}
+        onDeleted={jest.fn()}
+      />,
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('读取旅行失败，请重试');
+    expect(screen.queryByText(/SELECT|private|Tokyo|Notes/)).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: '重试' }));
+    expect(await screen.findByText('东京')).toBeTruthy();
+  });
+
   it('calls Edit and reloads persisted data when focus changes', async () => {
     const get = jest.fn<ReturnType<TripRepository['get']>, Parameters<TripRepository['get']>>()
       .mockResolvedValueOnce({ ok: true, value: detail() })
