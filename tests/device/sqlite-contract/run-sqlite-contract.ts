@@ -19,6 +19,8 @@ export interface SqliteContractEvidence {
   userVersion: number;
   journalMode: string;
   foreignKeys: number;
+  transactionForeignKeys: number;
+  illegalForeignKeyRejected: boolean;
   reopenRead: boolean;
   cascade: boolean;
   rollback: boolean;
@@ -77,6 +79,30 @@ export async function runExpoSqliteContract(
   assertContract(version?.user_version === 1, 'user_version is 1');
   assertContract(journal?.journal_mode?.toLowerCase() === 'wal', 'WAL enabled');
   assertContract(foreignKeys?.foreign_keys === 1, 'foreign keys enabled');
+
+  const transactionForeignKeysResult = await runExclusiveTransaction(
+    connection,
+    async (transaction) =>
+      (
+        await transaction.getFirstAsync<PragmaRow>('PRAGMA foreign_keys')
+      )?.foreign_keys ?? 0,
+  );
+  assertContract(
+    transactionForeignKeysResult.ok && transactionForeignKeysResult.value === 1,
+    'transaction foreign keys enabled',
+  );
+  const illegalForeignKey = await runExclusiveTransaction(
+    connection,
+    async (transaction) => {
+      await transaction.runAsync(
+        `INSERT INTO checklist_items
+          (trip_id, title, completed, created_at) VALUES (?, ?, 0, ?)`,
+        [999_999_999, '非法外键', 0],
+      );
+    },
+  );
+  const illegalForeignKeyRejected = !illegalForeignKey.ok;
+  assertContract(illegalForeignKeyRejected, 'illegal foreign key rejected');
 
   const trips = createTripRepository(connection, { now: () => 1 });
   const created = await trips.create(
@@ -173,6 +199,8 @@ export async function runExpoSqliteContract(
     userVersion: version.user_version ?? 0,
     journalMode: journal.journal_mode ?? '',
     foreignKeys: foreignKeys.foreign_keys ?? 0,
+    transactionForeignKeys: transactionForeignKeysResult.value,
+    illegalForeignKeyRejected,
     reopenRead,
     cascade,
     rollback,

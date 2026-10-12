@@ -36,13 +36,13 @@
 
 ## R4 — SQLite、状态与日期
 
-**Decision**：唯一 SQLite 来源、参数绑定、foreign_keys/WAL、user_version 顺序迁移、独占短事务、轻量 Repository；React 保存临时表单/查询展示。纯 TS date-only 算术和 grapheme 校验。Create 拒绝过去 departureDate；Edit existing Trip 允许保存合法过去日期。Trip 删除不持久化 lifecycle/deleting 状态，仅用 UI `isDeleting`，先取消 future scheduled reminders，再事务删除并 FK cascade。
+**Decision**：唯一 SQLite 来源、参数绑定、foreign_keys/WAL、user_version 顺序迁移、独占短事务、轻量 Repository；React 保存临时表单/查询展示。独占事务使用 SDK 57 公开 API 打开独立连接，在 `BEGIN IMMEDIATE` 前启用并验证 foreign_keys，结束后 commit/rollback 并关闭。纯 TS date-only 算术和 grapheme 校验。Create 拒绝过去 departureDate；Edit existing Trip 允许保存合法过去日期。Trip 删除不持久化 lifecycle/deleting 状态，仅用 UI `isDeleting`，先取消 future scheduled reminders，再事务删除并 FK cascade。
 
 **Rationale**：事务失败可回滚，schema 可升级；页面刷新从 DB 恢复，不产生长期双状态。Create/Edit 分流允许自然过期 Trip 继续编辑而不引入 Archive。日历 components 映射 UTC day ordinal 避免 DST 天长变化，UTC 不承担用户日期语义。删除取消失败则保留 SQLite 数据；若取消成功后在 DB 删除前崩溃，启动 reconciliation 根据仍存在的 Reminder desired state/status/revision/notification_id 恢复 future 调度。不为历史已展示通知阻塞删除。
 
 **Alternatives considered**：ORM、AsyncStorage、Redux/Zustand/MobX、通用多层框架不提供当前不可替代收益；UTC timestamp 出发日期违反要求；JS length 不等于可见字符；Trip lifecycle/deleting 持久状态不是 Specification 要求，增加 schema 和恢复分支而无必要收益。
 
-来源：[SDK57 SQLite](https://docs.expo.dev/versions/v57.0.0/sdk/sqlite/)。迁移/表设计为本项目决策。Intl.Segmenter 的 Hermes 实际兼容性须在实施验证，不以 Node 中通过代替原生通过。
+来源：[SDK57 SQLite](https://docs.expo.dev/versions/v57.0.0/sdk/sqlite/)。迁移/表设计为本项目决策。Android Development Build 已验证 Hermes 不提供 `Intl.Segmenter`；经 Review 批准使用零依赖、MIT 许可的纯 JS `unicode-segmenter/grapheme` 实现 extended grapheme cluster 计数，不修改全局 `Intl`，并以 Node 回归测试与 Hermes 设备契约共同验收。
 
 ## R5 — 测试、构建与质量门禁
 

@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065、Phase 6 T066–T081、Phase 7 T082–T094 与 Phase 8 T095–T104A 已通过；已批准进入 Phase 9，但尚未执行 Phase 9。T061 真实 SQLite contract、Android merged development artifact、Android/iOS 原生测试与真实备份属性尚未在 development build/真机执行；通知调度、断网冷启动/离线重启恢复、网络抓包、外接键盘及设备无障碍/字体缩放证据仍待后续验证。
+**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065、Phase 6 T066–T081、Phase 7 T082–T094 与 Phase 8 T095–T104A 已通过；Phase 9 已完成 T105–T108，尚未进入 T109。Android Hermes grapheme 与 exclusive transaction foreign-key blocker 均已修复；Android development client、真实 SQLite contract、Local Module、merged manifest 与 backup rules 已验证通过。iOS 原生构建、通知调度、断网冷启动/离线重启恢复、网络抓包、外接键盘及设备无障碍/字体缩放证据仍待后续验证。
 
 **约束**:
 
@@ -181,10 +181,10 @@
 
 | Task ID | Description | Dependencies | Files / Area | Validation | 可并行 | Human Review |
 |---|---|---|---|---|---|---|
-| T105 | 安装 SDK57 兼容 `expo-dev-client`，保持生产依赖边界，不使用 Expo Go 作为 Local Module/backup 验收。 | T104A | `package.json`, `package-lock.json`, `app.json` | Expo doctor/依赖版本检查通过。 | 否 | 是 |
-| T106 | 配置 `eas.json` development profile：`developmentClient=true`、`distribution=internal`，不加入秘密或自动提交。 | T105 | `eas.json` | EAS config 解析成功；profile 与 production 隔离。 | 否 | 是 |
-| T107 [P] | 配置 preview profile，内嵌 JS 且不依赖 Metro；平台输出保持既有决策。 | T105 | `eas.json` | preview config 可解析且无 developmentClient。 | 是 | 是 |
-| T108 | 在 Android emulator 构建/安装 development client，运行实际 SQLite 契约、Local Module、manifest/permissions/backup rule 检查。 | T106, T087, T037 | Development build evidence | 记录 emulator/OS/build/commit/结果；失败形成修正任务。 | 否 | 是 |
+| T105 | [X] 安装 SDK57 兼容 `expo-dev-client`，保持生产依赖边界，不使用 Expo Go 作为 Local Module/backup 验收。 | T104A | `package.json`, `package-lock.json`, `app.json` | Expo doctor/依赖版本检查通过。 | 否 | 是 |
+| T106 | [X] 配置 `eas.json` development profile：`developmentClient=true`、`distribution=internal`，不加入秘密或自动提交。 | T105 | `eas.json` | EAS config 解析成功；profile 与 production 隔离。 | 否 | 是 |
+| T107 [P] | [X] 配置 preview profile，内嵌 JS 且不依赖 Metro；平台输出保持既有决策。 | T105 | `eas.json` | preview config 可解析且无 developmentClient。 | 是 | 是 |
+| T108 | [X] 在 Android emulator 构建/安装 development client，运行实际 SQLite 契约、Local Module、manifest/permissions/backup rule 检查。 | T106, T087, T037 | Development build evidence | 记录 emulator/OS/build/commit/结果；失败形成修正任务。 | 否 | 是 |
 | T109 | 在 iOS simulator 构建/安装 development client，运行实际 SQLite 契约与 backup exclusion 属性检查。 | T106, T087, T037 | Development build evidence | 记录 simulator/OS/build/commit/结果；不冒充真机通知证据。 | 否 | 是 |
 | T110 | 验证 Local Module、plugin 或 app config 变更后必须 rebuild；仅 JS/TS UI 变更可通过 Metro 刷新。 | T108, T109 | Developer workflow docs/evidence | 分别修改原生边界和 JS，验证 rebuild/refresh 行为符合说明。 | 否 | 是 |
 | T111 | 构建并验证 preview：关闭 Metro、断网冷启动、读取/修改持久化数据，确认正式运行不依赖开发服务器。 | T107, T108, T109 | Preview build evidence | Android/iOS simulator 离线冷启动与核心流程通过。 | 否 | 是 |

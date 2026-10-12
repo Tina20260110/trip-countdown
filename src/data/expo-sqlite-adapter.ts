@@ -15,10 +15,10 @@ export interface CloseableDatabaseConnection extends DatabaseConnection {
   closeAsync(): Promise<void>;
 }
 
-type ExpoTransaction = Parameters<
-  Parameters<SQLiteDatabase['withExclusiveTransactionAsync']>[0]
->[0];
-type ExpoConnection = SQLiteDatabase | ExpoTransaction;
+type ExpoConnection = SQLiteDatabase;
+type ExclusiveTransactionRunner = (
+  task: (transaction: DatabaseTransactionConnection) => Promise<void>,
+) => Promise<void>;
 
 function bindValues(values: readonly SqlBindValue[]): SqlBindValue[] {
   return [...values];
@@ -27,6 +27,7 @@ function bindValues(values: readonly SqlBindValue[]): SqlBindValue[] {
 function adaptConnection(
   database: ExpoConnection,
   close?: () => Promise<void>,
+  runExclusiveTransaction?: ExclusiveTransactionRunner,
 ): CloseableDatabaseConnection {
   return {
     execAsync(sql) {
@@ -49,13 +50,10 @@ function adaptConnection(
       return database.getAllAsync<T>(sql, bindValues(params));
     },
     withExclusiveTransactionAsync(task) {
-      if (!('withExclusiveTransactionAsync' in database)) {
+      if (!runExclusiveTransaction) {
         throw new Error('Nested exclusive transactions are unavailable');
       }
-      return database.withExclusiveTransactionAsync(async (transaction) => {
-        const adaptedTransaction: DatabaseConnection = adaptConnection(transaction);
-        await task(adaptedTransaction as DatabaseTransactionConnection);
-      });
+      return runExclusiveTransaction(task);
     },
     async closeAsync() {
       if (!close) return;
@@ -69,7 +67,48 @@ export async function openExpoSqliteConnection(
   databaseName: string,
 ): Promise<CloseableDatabaseConnection> {
   const database = await openDatabaseAsync(databaseName, {}, directory);
-  return adaptConnection(database, () => database.closeAsync());
+
+  const runExclusiveTransaction: ExclusiveTransactionRunner = async (task) => {
+    const transaction = await openDatabaseAsync(
+      databaseName,
+      { useNewConnection: true },
+      directory,
+    );
+    let began = false;
+
+    try {
+      await transaction.execAsync('PRAGMA foreign_keys = ON');
+      const foreignKeys = await transaction.getFirstAsync<{ foreign_keys?: unknown }>(
+        'PRAGMA foreign_keys',
+      );
+      if (foreignKeys?.foreign_keys !== 1) {
+        throw new Error('Foreign key enforcement is unavailable');
+      }
+
+      await transaction.execAsync('BEGIN IMMEDIATE');
+      began = true;
+      await task(adaptConnection(transaction));
+      await transaction.execAsync('COMMIT');
+      began = false;
+    } catch (error) {
+      if (began) {
+        try {
+          await transaction.execAsync('ROLLBACK');
+        } catch {
+          // Preserve the original transaction failure for stable error mapping.
+        }
+      }
+      throw error;
+    } finally {
+      await transaction.closeAsync();
+    }
+  };
+
+  return adaptConnection(
+    database,
+    () => database.closeAsync(),
+    runExclusiveTransaction,
+  );
 }
 
 export function createExpoSqliteDriver(): DatabaseDriver {

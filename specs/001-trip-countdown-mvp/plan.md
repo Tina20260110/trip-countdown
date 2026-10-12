@@ -98,7 +98,7 @@ eas.json
 
 字段与约束见 [data-model.md](data-model.md)。Trip→Checklist/Reminder 一对多；Countdown 与 progress 动态计算。
 
-用 PRAGMA user_version 表示 schema version，首版 1。先准备排除备份的目录，再 openDatabaseAsync；每个连接启用 foreign_keys，使用 WAL。migration 按序在独占事务内执行，成功后才更新版本。数据库版本高于应用支持版本时停止写入；失败回滚、保留数据、允许重试，禁止删库重建。参数绑定处理用户内容；固定 migration SQL 可用 execAsync。写入串行化，withExclusiveTransactionAsync 内全部查询使用事务对象，避免异步事务混入其他操作。[SQLite SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/sqlite/)
+用 PRAGMA user_version 表示 schema version，首版 1。先准备排除备份的目录，再 openDatabaseAsync；每个连接启用 foreign_keys，使用 WAL。migration 按序在独占事务内执行，成功后才更新版本。数据库版本高于应用支持版本时停止写入；失败回滚、保留数据、允许重试，禁止删库重建。参数绑定处理用户内容；固定 migration SQL 可用 execAsync。写入串行化，独占事务内全部查询使用事务对象，避免异步事务混入其他操作。SDK 57 原生 `withExclusiveTransactionAsync` 会先在新连接开始事务，无法在事务前配置该连接；adapter 因此用公开 `openDatabaseAsync(..., { useNewConnection: true })` 建立独立连接，先启用并验证 foreign_keys，再 `BEGIN IMMEDIATE`，最终 commit/rollback 并关闭。[SQLite SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/sqlite/)
 
 ## Repository Boundaries and State
 
@@ -114,7 +114,7 @@ Departure Date 保存经校验的 YYYY-MM-DD，不保存 UTC timestamp。当前�
 
 正数“还有 N 天”、零“今天出发”、负数“旅行已结束”。Create Trip 保存时重新读取设备当前本地日期，拒绝早于当天的 departureDate；Edit existing Trip 只要求 departureDate 是合法 date-only 值，允许保存过去日期，使自然过期 Trip 仍能编辑 Destination、Notes 或修正日期。前台到下一本地午夜刷新，恢复前台和聚焦也重算，不使用固定24小时间隔。不新增 Archive 状态或功能。
 
-长度按 grapheme cluster，优先验证 SDK 57 Hermes 的 Intl.Segmenter；不能退化为 JS length/code point 计数。组合重音、国旗、ZWJ emoji 纳入测试；如目标运行时缺能力，先审查最小兼容方案，不静默加库。
+长度按 grapheme cluster；不能退化为 JS length/code point 计数。Android Development Build 确认 SDK 57 Hermes 不提供 `Intl.Segmenter` 后，采用经 Review 批准的纯 JS `unicode-segmenter/grapheme`，不污染全局 `Intl`。组合重音、国旗、ZWJ emoji、肤色修饰符纳入 Node 与 Hermes 验证。
 
 ## Reminder Scheduling Strategy
 
