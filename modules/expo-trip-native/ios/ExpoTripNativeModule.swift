@@ -17,7 +17,9 @@ public class ExpoTripNativeModule: Module {
         applicationSupport: applicationSupport,
         fileManager: .default
       )
-      return ["directory": directory.path]
+      // expo-sqlite SDK 57 parses the directory with URL(string:), so return a
+      // file URL to preserve spaces such as "Application Support".
+      return ["directory": directory.absoluteString]
     }
   }
 }

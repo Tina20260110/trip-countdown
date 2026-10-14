@@ -2,7 +2,7 @@
 
 **Input**: `spec.md`、`plan.md`、`research.md`、`data-model.md`、`quickstart.md`、`contracts/ui-and-boundaries.md`、`.specify/memory/constitution.md`
 
-**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065、Phase 6 T066–T081、Phase 7 T082–T094 与 Phase 8 T095–T104A 已通过；Phase 9 已完成 T105–T108，尚未进入 T109。Android Hermes grapheme 与 exclusive transaction foreign-key blocker 均已修复；Android development client、真实 SQLite contract、Local Module、merged manifest 与 backup rules 已验证通过。iOS 原生构建、通知调度、断网冷启动/离线重启恢复、网络抓包、外接键盘及设备无障碍/字体缩放证据仍待后续验证。
+**Status**: Phase 1 T001–T011、Phase 2 T012–T024A、Phase 3 T025–T040A、Phase 4 T041–T055、Phase 5 T056–T065、Phase 6 T066–T081、Phase 7 T082–T094 与 Phase 8 T095–T104A 已通过；Phase 9 已完成 T105–T111，尚未进入 T112。Android 与 iOS development client、真实 SQLite contract、Local Module 及平台私有存储属性已验证；Android 与 iOS preview 均已完成无 Metro、断网冷启动和持久化读写验证。真实通知送达、真机 backup/restore、运行时隐私、外接键盘及设备无障碍/字体缩放证据仍待后续验证。
 
 **约束**:
 
@@ -185,9 +185,9 @@
 | T106 | [X] 配置 `eas.json` development profile：`developmentClient=true`、`distribution=internal`，不加入秘密或自动提交。 | T105 | `eas.json` | EAS config 解析成功；profile 与 production 隔离。 | 否 | 是 |
 | T107 [P] | [X] 配置 preview profile，内嵌 JS 且不依赖 Metro；平台输出保持既有决策。 | T105 | `eas.json` | preview config 可解析且无 developmentClient。 | 是 | 是 |
 | T108 | [X] 在 Android emulator 构建/安装 development client，运行实际 SQLite 契约、Local Module、manifest/permissions/backup rule 检查。 | T106, T087, T037 | Development build evidence | 记录 emulator/OS/build/commit/结果；失败形成修正任务。 | 否 | 是 |
-| T109 | 在 iOS simulator 构建/安装 development client，运行实际 SQLite 契约与 backup exclusion 属性检查。 | T106, T087, T037 | Development build evidence | 记录 simulator/OS/build/commit/结果；不冒充真机通知证据。 | 否 | 是 |
-| T110 | 验证 Local Module、plugin 或 app config 变更后必须 rebuild；仅 JS/TS UI 变更可通过 Metro 刷新。 | T108, T109 | Developer workflow docs/evidence | 分别修改原生边界和 JS，验证 rebuild/refresh 行为符合说明。 | 否 | 是 |
-| T111 | 构建并验证 preview：关闭 Metro、断网冷启动、读取/修改持久化数据，确认正式运行不依赖开发服务器。 | T107, T108, T109 | Preview build evidence | Android/iOS simulator 离线冷启动与核心流程通过。 | 否 | 是 |
+| T109 | [X] 在 iOS simulator 构建/安装 development client，运行实际 SQLite 契约与 backup exclusion 属性检查。 | T106, T087, T037 | Development build evidence | 记录 simulator/OS/build/commit/结果；不冒充真机通知证据。 | 否 | 是 |
+| T110 | [X] 验证 Local Module、plugin 或 app config 变更后必须 rebuild；仅 JS/TS UI 变更可通过 Metro 刷新。 | T108, T109 | Developer workflow docs/evidence | 分别修改原生边界和 JS，验证 rebuild/refresh 行为符合说明。 | 否 | 是 |
+| T111 | [X] 构建并验证 preview：关闭 Metro、断网冷启动、读取/修改持久化数据，确认正式运行不依赖开发服务器。 | T107, T108, T109 | Preview build evidence | Android/iOS simulator 离线冷启动与核心流程通过。 | 否 | 是 |
 | T112 | 在 GitHub Actions 实际执行 quality workflow 并将 lint/typecheck/test 设置为 required checks；记录 commit 与结果。 | T006, T102 | GitHub repository settings/evidence | PR/主分支运行成功；任一失败阻断合并。 | 否 | 是（外部设置） |
 | T113 | 审查 production dependency graph、expo-notifications 传递依赖、merged manifest、permissions 与自动初始化；确认无 Firebase project/push token/Analytics。 | T108, T101 | Dependency/manifest reports | 报告含锁定版本和结论；无无关敏感权限/exact alarm。 | 否 | 是 |
 | T114 | **Phase 9 Automated Validation**：重跑 CI 四门禁、Expo config/prebuild checks、development/preview 可自动化检查。 | T105-T113 | Build/CI | 全部可执行项通过；外部账户或真机项明确状态。 | 否 | 否 |
